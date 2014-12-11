@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1 (Nightly: 0bc5bd6) (2014-12-11)
+ * Version 2.1 (Nightly: 38f4707) (2014-12-12)
  * http://elfinder.org
  * 
  * Copyright 2009-2014, Studio 42
@@ -3580,7 +3580,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1 (Nightly: 0bc5bd6)';
+elFinder.prototype.version = '2.1 (Nightly: 38f4707)';
 
 
 
@@ -12098,6 +12098,9 @@ elFinder.prototype.commands.search = function() {
  * @author Dmitry (dio) Levashov
  **/
 elFinder.prototype.commands.sort = function() {
+	var self  = this,
+	fm    = self.fm;
+	
 	/**
 	 * Command options
 	 *
@@ -12105,17 +12108,29 @@ elFinder.prototype.commands.sort = function() {
 	 */
 	this.options = {ui : 'sortbutton'};
 	
+	fm.bind('open sortchange', function() {
+		self.variants = [];
+		$.each(fm.sortRules, function(name, value) {
+			var sort = {
+					type  : name,
+					order : name == fm.sortType ? fm.sortOrder == 'asc' ? 'desc' : 'asc' : fm.sortOrder
+				};
+			var arr = name == fm.sortType ? (sort.order == 'asc'? 'n' : 's') : '';
+			self.variants.push([sort, (arr? '<span class="ui-icon ui-icon-arrowthick-1-'+arr+'"></span>' : '') + '&nbsp;' + fm.i18n('sort'+name)]);
+		});
+	});
+	
 	this.getstate = function() {
 		return 0;
 	}
 	
-	this.exec = function(hashes, sort) {
+	this.exec = function(hashes, sortopt) {
 		var fm = this.fm,
 			sort = $.extend({
 				type  : fm.sortType,
 				order : fm.sortOrder,
 				stick : fm.sortStickFolders
-			}, sort);
+			}, sortopt);
 
 		this.fm.setSort(sort.type, sort.order, sort.stick);
 		return $.Deferred().resolve();
