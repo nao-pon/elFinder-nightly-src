@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.x (Nightly: d1e8225) (2014-12-12)
+ * Version 2.x (Nightly: b76c9d9) (2014-12-12)
  * http://elfinder.org
  * 
  * Copyright 2009-2014, Studio 42
@@ -3031,7 +3031,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.x (Nightly: d1e8225)';
+elFinder.prototype.version = '2.x (Nightly: b76c9d9)';
 
 
 
@@ -4681,9 +4681,10 @@ $.fn.elfindercontextmenu = function(fm) {
 					wheight    = win.height(),
 					scrolltop  = win.scrollTop(),
 					scrollleft = win.scrollLeft(),
+					m          = fm.UA.Touch? 10 : 0,
 					css        = {
-						top  : (y + height < wheight ? y : y - height > 0 ? y - height : y) + scrolltop,
-						left : (x + width  < wwidth  ? x : x - width) + scrollleft,
+						top  : (y + m + height < wheight ? y + m : y - m - height > 0 ? y - m - height : y + m) + scrolltop,
+						left : (x + m + width  < wwidth  ? x + m : x - m - width) + scrollleft,
 						'z-index' : 100 + fm.getUI('workzone').zIndex()
 					};
 
@@ -5520,6 +5521,11 @@ $.fn.elfindercwd = function(fm, options) {
 						nl   = next.length,
 						sib;
 
+					if (cwd.data('longtap')) {
+						e.stopPropagation();
+						return;
+					}
+
 					e.stopImmediatePropagation();
 
 					if (e.shiftKey && (pl || nl)) {
@@ -5528,10 +5534,11 @@ $.fn.elfindercwd = function(fm, options) {
 					} else if (e.ctrlKey || e.metaKey) {
 						p.trigger(p.is('.'+clSelected) ? evtUnselect : evtSelect);
 					} else {
-						if ($(this).data('touching') && p.is('.'+clSelected)) {
-							$(this).data('touching', null);
+						if (p.data('touching') && p.is('.'+clSelected)) {
+							p.data('touching', null);
 							fm.dblclick({file : this.id});
 							unselectAll();
+							return;
 						} else {
 							unselectAll();
 							p.trigger(evtSelect);
@@ -5546,22 +5553,36 @@ $.fn.elfindercwd = function(fm, options) {
 				})
 				// for touch device
 				.delegate(fileSelector, 'touchstart.'+fm.namespace, function(e) {
-					$(this).data('touching', true);
+					e.stopPropagation();
 					var p = this.id ? $(this) : $(this).parents('[id]:first'),
 					  sel = p.prevAll('.'+clSelected+':first').length +
 					        p.nextAll('.'+clSelected+':first').length;
-					$(this).data('longtap', setTimeout(function(){
+					cwd.data('longtap', null);
+					p.data('touching', true);
+					p.data('tmlongtap', setTimeout(function(){
 						// long tap
-						p.trigger(p.is('.'+clSelected) ? evtUnselect : evtSelect);
-						trigger();
-						if (sel == 0 && p.is('.'+clSelected)) {
-							p.trigger('click');
+						cwd.data('longtap', true);
+						if (p.is('.'+clSelected) && sel > 0) {
+							p.trigger(evtUnselect);
 							trigger();
-						} 
+						} else {
+							if (e.target.nodeName != 'TD' || fm.selected().length > 0) {
+								p.trigger(evtSelect);
+								trigger();
+								p.trigger(fm.trigger('contextmenu', {
+									'type'    : 'files',
+									'targets' : fm.selected(),
+									'x'       : e.originalEvent.touches[0].clientX,
+									'y'       : e.originalEvent.touches[0].clientY
+								}));
+							}
+						}
 					}, 500));
 				})
 				.delegate(fileSelector, 'touchmove.'+fm.namespace+' touchend.'+fm.namespace, function(e) {
-					clearTimeout($(this).data('longtap'));
+					var p = this.id ? $(this) : $(this).parents('[id]:first');
+					e.stopPropagation();
+					clearTimeout(p.data('tmlongtap'));
 				})
 				// attach draggable
 				.delegate(fileSelector, 'mouseenter.'+fm.namespace, function(e) {
@@ -5626,10 +5647,10 @@ $.fn.elfindercwd = function(fm, options) {
 				.bind('contextmenu.'+fm.namespace, function(e) {
 					var file = $(e.target).closest('.'+clFile);
 					
-					if (file.length) {
+					if (file.length && (e.target.nodeName != 'TD' || $.inArray(file.get(0).id, fm.selected()) > -1)) {
 						e.stopPropagation();
 						e.preventDefault();
-						if (!file.is('.'+clDisabled)) {
+						if (!file.is('.'+clDisabled) && !file.data('touching')) {
 							if (!file.is('.'+clSelected)) {
 								// cwd.trigger('unselectall');
 								unselectAll();
@@ -5652,6 +5673,10 @@ $.fn.elfindercwd = function(fm, options) {
 				})
 				// unselect all on cwd click
 				.bind('click.'+fm.namespace, function(e) {
+					if (cwd.data('longtap')) {
+						e.stopPropagation();
+						return;
+					}
 					!e.shiftKey && !e.ctrlKey && !e.metaKey && unselectAll();
 				})
 				
@@ -5697,6 +5722,25 @@ $.fn.elfindercwd = function(fm, options) {
 						'y'       : e.clientY
 					});
 					
+				})
+				// for touch device
+				.bind('touchstart.'+fm.namespace, function(e) {
+					var p = $(this);
+					cwd.data('longtap', null);
+					p.data('touching', true);
+					p.data('tmlongtap', setTimeout(function(){
+						// long tap
+						cwd.data('longtap', true);
+						fm.trigger('contextmenu', {
+							'type'    : 'cwd',
+							'targets' : [fm.cwd().hash],
+							'x'       : e.originalEvent.touches[0].clientX,
+							'y'       : e.originalEvent.touches[0].clientY
+						});
+					}, 500));
+				})
+				.bind('touchmove.'+fm.namespace+' touchend.'+fm.namespace, function(e) {
+					clearTimeout($(this).data('tmlongtap'));
 				}),
 			
 			resize = function() {
@@ -5714,7 +5758,9 @@ $.fn.elfindercwd = function(fm, options) {
 			// workzone node
 			wz = parent.children('.elfinder-workzone').append(wrapper.append(this))
 			;
-			
+		
+		// for iOS5 bug
+		$('body').on('touchstart touchmove touchend', function(e){});
 		
 		if (fm.dragUpload) {
 			wrapper[0].addEventListener('dragenter', function(e) {
