@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1_n (Nightly: da7a88b) (2014-12-12)
+ * Version 2.1_n (Nightly: 9cd9b04) (2014-12-12)
  * http://elfinder.org
  * 
  * Copyright 2009-2014, Studio 42
@@ -3580,7 +3580,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1_n (Nightly: da7a88b)';
+elFinder.prototype.version = '2.1_n (Nightly: 9cd9b04)';
 
 
 
@@ -5341,7 +5341,7 @@ $.fn.elfindercontextmenu = function(fm) {
 				
 				
 				$.each(types[type]||[], function(i, name) {
-					var cmd, node, submenu;
+					var cmd, node, submenu, hover;
 					
 					if (name == '|' && sep) {
 						menu.append('<div class="elfinder-contextmenu-separator"/>');
@@ -5360,16 +5360,46 @@ $.fn.elfindercontextmenu = function(fm) {
 							
 							submenu = $('<div class="ui-corner-all elfinder-contextmenu-sub"/>')
 								.appendTo(node.append('<span class="elfinder-contextmenu-arrow"/>'));
-								
+							
+							hover = function(){
+									var win    = $(window),
+									baseleft   = $(node).offset().left,
+									basetop    = $(node).offset().top,
+									basewidth  = $(node).outerWidth(),
+									width      = submenu.outerWidth(),
+									height     = submenu.outerHeight(),
+									wwidth     = win.scrollLeft() + win.width(),
+									wheight    = win.scrollTop() + win.height(),
+									margin     = 5, x, y, over;
+
+									over = (baseleft + basewidth + width + margin) - wwidth;
+									x = (over > 0)? basewidth - over : basewidth;
+									over = (basetop + 5 + height + margin) - wheight;
+									y = (over > 0)? 5 - over : 5;
+
+									var css = {
+										left : x,
+										top : y
+									};
+									submenu.css(css).toggle();
+							};
+							
 							node.addClass('elfinder-contextmenu-group')
-								.hover(function() {
-									submenu.toggle()
-								})
+								.hover(function() { hover(); })
+								.on('touchstart', function(e){
+									if (node.hasClass('ui-state-hover')) {
+										return true;
+									}
+									node.addClass('ui-state-hover');
+									e.preventDefault();
+									hover();
+									return false;
+								});
 								
 							$.each(cmd.variants, function(i, variant) {
 								submenu.append(
 									$('<div class="elfinder-contextmenu-item"><span>'+variant[1]+'</span></div>')
-										.click(function(e) {
+										.on('click touchstart', function(e) {
 											e.stopPropagation();
 											close();
 											cmd.exec(targets, variant[0]);
