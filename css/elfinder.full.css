@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.x_n (Nightly: 81c5554) (2014-12-12)
+ * Version 2.x_n (Nightly: 9ac4f2e) (2014-12-12)
  * http://elfinder.org
  * 
  * Copyright 2009-2014, Studio 42
@@ -476,6 +476,7 @@
 	-khtml-user-select: none;
 	-webkit-user-select: none;
 	user-select: none;
+	-webkit-tap-highlight-color:rgba(0,0,0,0);
 }
 
 /* container active on dropenter */
@@ -983,6 +984,7 @@
 	-khtml-user-select: none;
 	-webkit-user-select: none;
 	user-select: none;
+	-webkit-tap-highlight-color:rgba(0,0,0,0);
 /*	border:1px solid #111;*/
 }
 
@@ -993,7 +995,10 @@
 .elfinder-ltr .ui-resizable-e { margin-left:10px; }
 
 /* folders tree container */
-.elfinder-tree { display:table; width:100%; margin: 0 0 .5em 0; }
+.elfinder-tree {
+	display:table; width:100%; margin: 0 0 .5em 0;
+	-webkit-tap-highlight-color:rgba(0,0,0,0);
+}
 
 /* one folder wrapper */
 .elfinder-navbar-wrapper, .elfinder-place-wrapper { }
