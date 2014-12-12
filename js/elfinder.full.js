@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.x (Nightly: b76c9d9) (2014-12-12)
+ * Version 2.x (Nightly: 0a95652) (2014-12-12)
  * http://elfinder.org
  * 
  * Copyright 2009-2014, Studio 42
@@ -3031,7 +3031,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.x (Nightly: b76c9d9)';
+elFinder.prototype.version = '2.x (Nightly: 0a95652)';
 
 
 
@@ -5476,7 +5476,7 @@ $.fn.elfindercwd = function(fm, options) {
 
 				wrapper[list ? 'addClass' : 'removeClass']('elfinder-cwd-wrapper-list');
 
-				list && cwd.html('<table><thead><tr class="ui-state-default"><td >'+msg.name+'</td><td>'+msg.perm+'</td><td>'+msg.mod+'</td><td>'+msg.size+'</td><td>'+msg.kind+'</td></tr></thead><tbody/></table>');
+				list && cwd.html('<table><thead><tr class="ui-state-default"><td class="elfinder-cwd-view-th-name">'+msg.name+'</td><td class="elfinder-cwd-view-th-perm">'+msg.perm+'</td><td class="elfinder-cwd-view-th-date">'+msg.mod+'</td><td class="elfinder-cwd-view-th-size">'+msg.size+'</td><td class="elfinder-cwd-view-th-kind">'+msg.kind+'</td></tr></thead><tbody/></table>');
 		
 				buffer = $.map(files, function(f) { return any || f.phash == phash ? f : null; });
 				
@@ -11258,9 +11258,37 @@ elFinder.prototype.commands.sort = function() {
 		});
 	});
 	
+	fm.bind('open sortchange viewchange', function() {
+		var timer = null;
+		timer && clearTimeout(timer);
+		timer = setTimeout(function(){
+			var cols = $(fm.cwd).find('div.elfinder-cwd-wrapper-list table');
+			if (cols.length) {
+				$.each(fm.sortRules, function(name, value) {
+					var td = cols.find('thead tr td.elfinder-cwd-view-th-'+name);
+					if (td.length) {
+						var current = ( name == fm.sortType),
+						sort = {
+							type  : name,
+							order : current ? fm.sortOrder == 'asc' ? 'desc' : 'asc' : fm.sortOrder
+						},arr;
+						if (current) {
+							arr = fm.sortOrder == 'asc' ? 'n' : 's';
+							$('<span class="ui-icon ui-icon-triangle-1-'+arr+'"/>').css({left:'+center+'}).appendTo(td);
+						}
+						$(td).on('click', function(e){
+							fm.exec('sort', [], sort);
+						});
+					}
+					
+				});
+			}
+		}, 100);
+	});
+	
 	this.getstate = function() {
 		return 0;
-	}
+	};
 	
 	this.exec = function(hashes, sortopt) {
 		var fm = this.fm,
@@ -11272,9 +11300,9 @@ elFinder.prototype.commands.sort = function() {
 
 		this.fm.setSort(sort.type, sort.order, sort.stick);
 		return $.Deferred().resolve();
-	}
+	};
 
-}
+};
 
 /*
  * File: /js/commands/up.js
