@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.x (Nightly: fcaaf63) (2014-12-21)
+ * Version 2.x (Nightly: 3406718) (2014-12-21)
  * http://elfinder.org
  * 
  * Copyright 2009-2014, Studio 42
@@ -3031,7 +3031,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.x (Nightly: fcaaf63)';
+elFinder.prototype.version = '2.x (Nightly: 3406718)';
 
 
 
