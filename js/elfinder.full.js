@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.x (Nightly: 85c6e5c) (2014-12-27)
+ * Version 2.x (Nightly: fdb0285) (2014-12-28)
  * http://elfinder.org
  * 
  * Copyright 2009-2014, Studio 42
@@ -3031,7 +3031,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.x (Nightly: 85c6e5c)';
+elFinder.prototype.version = '2.x (Nightly: fdb0285)';
 
 
 
@@ -6424,6 +6424,11 @@ $.fn.elfinderplaces = function(fm, opts) {
 			 * @return void
 			 **/
 			add = function(dir) {
+				if (!fm.files().hasOwnProperty(dir.hash)) {
+					// update cache
+					fm.trigger('tree', {tree: [dir]});
+				}
+				
 				var node = create(dir);
 
 				if (subtree.children().length) {
