@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1_n (Nightly: bf40094) (2014-12-28)
+ * Version 2.1_n (Nightly: 8dfebb0) (2014-12-28)
  * http://elfinder.org
  * 
  * Copyright 2009-2014, Studio 42
@@ -3580,7 +3580,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1_n (Nightly: bf40094)';
+elFinder.prototype.version = '2.1_n (Nightly: 8dfebb0)';
 
 
 
@@ -3765,9 +3765,11 @@ elFinder.prototype._options = {
 	 * @type Array
 	 */
 	commands : [
+		'pixlr',
 		'open', 'reload', 'home', 'up', 'back', 'forward', 'getfile', 'quicklook', 
 		'download', 'rm', 'duplicate', 'rename', 'mkdir', 'mkfile', 'upload', 'copy', 
-		'cut', 'paste', 'edit', 'extract', 'archive', 'search', 'info', 'view', 'help', 'resize', 'sort', 'netmount', 'netunmount', 'pixlr'
+		'cut', 'paste', 'edit', 'extract', 'archive', 'search', 'info', 'view', 'help',
+		'resize', 'sort', 'netmount', 'netunmount', 'places'
 	],
 	
 	/**
