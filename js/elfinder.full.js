@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1 (Nightly: b532f47) (2014-12-28)
+ * Version 2.1 (Nightly: a97d227) (2014-12-28)
  * http://elfinder.org
  * 
  * Copyright 2009-2014, Studio 42
@@ -3580,7 +3580,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1 (Nightly: b532f47)';
+elFinder.prototype.version = '2.1 (Nightly: a97d227)';
 
 
 
@@ -7223,7 +7223,12 @@ $.fn.elfinderplaces = function(fm, opts) {
 					$(this).toggleClass('ui-state-hover');
 				})
 				.delegate('.'+navdir, 'click', function(e) {
-					fm.exec('open', $(this).attr('id').substr(6));
+					var p = $(this);
+					if (p.data('longtap')) {
+						e.stopPropagation();
+						return;
+					}
+					fm.exec('open', p.attr('id').substr(6));
 				})
 				.delegate('.'+navdir+':not(.'+clroot+')', 'contextmenu', function(e) {
 					var hash = $(this).attr('id').substr(6);
@@ -7264,12 +7269,14 @@ $.fn.elfinderplaces = function(fm, opts) {
 				// for touch device
 				//.on('touchstart.'+fm.namespace, '.'+navdir+':not(.'+clroot+')', function(e) {
 				.on('touchstart', '.'+navdir+':not(.'+clroot+')', function(e) {
-					var p = $(this);
-					places.data('longtap', null);
+					var p    = $(this),
+					    hash = $(this).attr('id').substr(6);
+					
+					p.data('longtap', null);
 					p.data('touching', true);
 					p.data('tmlongtap', setTimeout(function(){
 						// long tap
-						places.data('longtap', true);
+						p.data('longtap', true);
 						fm.trigger('contextmenu', {
 							raw : [{
 								label    : fm.i18n('rmFromPlaces'),
