@@ -1,9 +1,9 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1 (Nightly: 4ad40e4) (2014-12-29)
+ * Version 2.1 (Nightly: 512a096) (2015-01-15)
  * http://elfinder.org
  * 
- * Copyright 2009-2014, Studio 42
+ * Copyright 2009-2015, Studio 42
  * Licensed under a 3 clauses BSD license
  */
 (function($) {
@@ -186,13 +186,6 @@ window.elFinder = function(node, opts) {
 		queue = [],
 		
 		/**
-		 * Net drivers names
-		 *
-		 * @type Array
-		 **/
-		netDrivers = [],
-		
-		/**
 		 * Commands prototype
 		 *
 		 * @type Object
@@ -327,6 +320,12 @@ window.elFinder = function(node, opts) {
 	 **/
 	this.oldAPI = false;
 	
+	/**
+	 * Net drivers names
+	 *
+	 * @type Array
+	 **/
+	this.netDrivers = [];
 	/**
 	 * User os. Required to bind native shortcuts for open/rename
 	 *
@@ -3580,7 +3579,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1 (Nightly: 4ad40e4)';
+elFinder.prototype.version = '2.1 (Nightly: 512a096)';
 
 
 
@@ -7291,8 +7290,7 @@ $.fn.elfinderplaces = function(fm, opts) {
 
 		// "on regist" for command exec
 		$(this).on('regist', function(e, files){
-			$.each(files, function(i, hash) {
-				var dir = fm.file(hash);
+			$.each(files, function(i, dir) {
 				if (dir && dir.mime == 'directory' && $.inArray(dir.hash, dirs) === -1) {
 					add(dir);
 				}
@@ -7309,7 +7307,7 @@ $.fn.elfinderplaces = function(fm, opts) {
 			
 			places.show().parent().show();
 
-			dirs = $.map(fm.storage('places').split(','), function(hash) { return hash || null});
+			dirs = $.map((fm.storage('places') || '').split(','), function(hash) { return hash || null;});
 			
 			if (dirs.length) {
 				root.prepend(spinner);
@@ -10289,7 +10287,8 @@ elFinder.prototype.commands.places = function() {
 	};
 	
 	this.exec = function(hashes) {
-		places.trigger('regist', [hashes]);
+		var files = this.files(hashes);
+		places.trigger('regist', [ files ]);
 	};
 	
 	fm.one('load', function(){
