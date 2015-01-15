@@ -1,9 +1,9 @@
 /*!
  * elFinder - file manager for web
- * Version 2.x (Nightly: 4534de8) (2014-12-29)
+ * Version 2.x (Nightly: d9a806a) (2015-01-15)
  * http://elfinder.org
  * 
- * Copyright 2009-2014, Studio 42
+ * Copyright 2009-2015, Studio 42
  * Licensed under a 3 clauses BSD license
  */
 (function($) {
@@ -185,13 +185,6 @@ window.elFinder = function(node, opts) {
 		queue = [],
 		
 		/**
-		 * Net drivers names
-		 *
-		 * @type Array
-		 **/
-		netDrivers = [],
-		
-		/**
 		 * Commands prototype
 		 *
 		 * @type Object
@@ -326,6 +319,12 @@ window.elFinder = function(node, opts) {
 	 **/
 	this.oldAPI = false;
 	
+	/**
+	 * Net drivers names
+	 *
+	 * @type Array
+	 **/
+	this.netDrivers = [];
 	/**
 	 * User os. Required to bind native shortcuts for open/rename
 	 *
@@ -3031,7 +3030,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.x (Nightly: 4534de8)';
+elFinder.prototype.version = '2.x (Nightly: d9a806a)';
 
 
 
@@ -6591,7 +6590,7 @@ $.fn.elfinderplaces = function(fm, opts) {
 			
 			places.show().parent().show();
 
-			dirs = $.map(fm.storage('places').split(','), function(hash) { return hash || null});
+			dirs = $.map((fm.storage('places') || '').split(','), function(hash) { return hash || null;});
 			
 			if (dirs.length) {
 				root.prepend(spinner);
