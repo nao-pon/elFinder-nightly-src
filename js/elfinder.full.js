@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1 (Nightly: f69759b) (2015-01-27)
+ * Version 2.1 (Nightly: 5b894eb) (2015-01-29)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -2386,7 +2386,7 @@ elFinder.prototype = {
 			xhr.addEventListener('load', function(e) {
 				var status = xhr.status, res, curr = 0, error = '';
 				
-				if (status != 200) {
+				if (status >= 400) {
 					if (status > 500) {
 						error = 'errResponse';
 					} else {
@@ -3579,7 +3579,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1 (Nightly: f69759b)';
+elFinder.prototype.version = '2.1 (Nightly: 5b894eb)';
 
 
 
@@ -6221,6 +6221,9 @@ $.fn.elfindercwd = function(fm, options) {
 				// for touch device
 				.delegate(fileSelector, 'touchstart.'+fm.namespace, function(e) {
 					e.stopPropagation();
+					if (e.target.nodeName == 'INPUT') {
+						return;
+					}
 					var p = this.id ? $(this) : $(this).parents('[id]:first'),
 					  sel = p.prevAll('.'+clSelected+':first').length +
 					        p.nextAll('.'+clSelected+':first').length;
@@ -6247,8 +6250,11 @@ $.fn.elfindercwd = function(fm, options) {
 					}, 500));
 				})
 				.delegate(fileSelector, 'touchmove.'+fm.namespace+' touchend.'+fm.namespace, function(e) {
-					var p = this.id ? $(this) : $(this).parents('[id]:first');
 					e.stopPropagation();
+					if (e.target.nodeName == 'INPUT') {
+						return;
+					}
+					var p = this.id ? $(this) : $(this).parents('[id]:first');
 					clearTimeout(p.data('tmlongtap'));
 				})
 				// attach draggable
