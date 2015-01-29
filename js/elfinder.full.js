@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.x (Nightly: 9ccb359) (2015-01-27)
+ * Version 2.x (Nightly: 85cef10) (2015-01-29)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -2141,7 +2141,7 @@ elFinder.prototype = {
 				if (status > 500) {
 					return dfrd.reject('errResponse');
 				}
-				if (status != 200) {
+				if (status >= 400) { // @Pilooz 20x, 30x are not considered as http Errors. 40x and 500 are.
 					return dfrd.reject('errConnect');
 				}
 				if (xhr.readyState != 4) {
@@ -3030,7 +3030,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.x (Nightly: 9ccb359)';
+elFinder.prototype.version = '2.x (Nightly: 85cef10)';
 
 
 
@@ -5580,6 +5580,9 @@ $.fn.elfindercwd = function(fm, options) {
 				// for touch device
 				.delegate(fileSelector, 'touchstart.'+fm.namespace, function(e) {
 					e.stopPropagation();
+					if (e.target.nodeName == 'INPUT') {
+						return;
+					}
 					var p = this.id ? $(this) : $(this).parents('[id]:first'),
 					  sel = p.prevAll('.'+clSelected+':first').length +
 					        p.nextAll('.'+clSelected+':first').length;
@@ -5606,8 +5609,11 @@ $.fn.elfindercwd = function(fm, options) {
 					}, 500));
 				})
 				.delegate(fileSelector, 'touchmove.'+fm.namespace+' touchend.'+fm.namespace, function(e) {
-					var p = this.id ? $(this) : $(this).parents('[id]:first');
 					e.stopPropagation();
+					if (e.target.nodeName == 'INPUT') {
+						return;
+					}
+					var p = this.id ? $(this) : $(this).parents('[id]:first');
 					clearTimeout(p.data('tmlongtap'));
 				})
 				// attach draggable
