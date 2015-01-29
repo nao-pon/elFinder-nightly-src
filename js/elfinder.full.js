@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1 (Nightly: 3e78f2d) (2015-01-29)
+ * Version 2.1 (Nightly: 7297393) (2015-01-30)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -1954,6 +1954,7 @@ elFinder.prototype = {
 			'application/x-awk'             : 'AWK',
 			'application/x-gzip'            : 'GZIP',
 			'application/x-bzip2'           : 'BZIP',
+			'application/x-xz'              : 'XZ',
 			'application/zip'               : 'ZIP',
 			'application/x-zip'               : 'ZIP',
 			'application/x-rar'             : 'RAR',
@@ -3579,7 +3580,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1 (Nightly: 3e78f2d)';
+elFinder.prototype.version = '2.1 (Nightly: 7297393)';
 
 
 
@@ -5164,6 +5165,7 @@ if (elFinder && elFinder.prototype && typeof(elFinder.prototype.i18) == 'object'
 			'kindTAR'         : 'TAR archive',
 			'kindGZIP'        : 'GZIP archive',
 			'kindBZIP'        : 'BZIP archive',
+			'kindXZ'          : 'XZ archive',
 			'kindZIP'         : 'ZIP archive',
 			'kindRAR'         : 'RAR archive',
 			'kindJAR'         : 'Java JAR file',
