@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1 (Nightly: e7da5bc) (2015-01-31)
+ * Version 2.1 (Nightly: 135ed41) (2015-01-31)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -3587,7 +3587,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1 (Nightly: e7da5bc)';
+elFinder.prototype.version = '2.1 (Nightly: 135ed41)';
 
 
 
@@ -6156,9 +6156,9 @@ $.fn.elfindercwd = function(fm, options) {
 				var columns = fm.options.uiOptions.cwd.listView.columns;
 				for (var i = 0; i < columns.length; i++) {
 					if (fm.options.uiOptions.cwd.listView.columnsCustomName[columns[i]] != null) {
-						customColsName +='<td>'+fm.options.uiOptions.cwd.listView.columnsCustomName[columns[i]]+'</td>';
+						customColsName +='<td class="elfinder-cwd-view-th-'+columns[i]+'">'+fm.options.uiOptions.cwd.listView.columnsCustomName[columns[i]]+'</td>';
 					} else {
-						customColsName +='<td>'+msg[columns[i]]+'</td>';
+						customColsName +='<td class="elfinder-cwd-view-th-'+columns[i]+'">'+msg[columns[i]]+'</td>';
 					}
 				}
 				return customColsName;
