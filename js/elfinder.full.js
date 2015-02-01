@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1 (Nightly: 135ed41) (2015-01-31)
+ * Version 2.1 (Nightly: df20765) (2015-02-01)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -3587,7 +3587,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1 (Nightly: 135ed41)';
+elFinder.prototype.version = '2.1 (Nightly: df20765)';
 
 
 
@@ -6152,14 +6152,17 @@ $.fn.elfindercwd = function(fm, options) {
 			},
 			
 			customColsNameBuild = function() {
-				var customColsName = '';
-				var columns = fm.options.uiOptions.cwd.listView.columns;
+				var name = '',
+				customColsName = '',
+				columns = fm.options.uiOptions.cwd.listView.columns,
+				names = $.extend({}, msg, fm.options.uiOptions.cwd.listView.columnsCustomName);
 				for (var i = 0; i < columns.length; i++) {
-					if (fm.options.uiOptions.cwd.listView.columnsCustomName[columns[i]] != null) {
-						customColsName +='<td class="elfinder-cwd-view-th-'+columns[i]+'">'+fm.options.uiOptions.cwd.listView.columnsCustomName[columns[i]]+'</td>';
+					if (typeof names[columns[i]] !== 'undefined') {
+						name = names[columns[i]];
 					} else {
-						customColsName +='<td class="elfinder-cwd-view-th-'+columns[i]+'">'+msg[columns[i]]+'</td>';
+						name = fm.i18n(columns[i]);
 					}
+					customColsName +='<td class="elfinder-cwd-view-th-'+columns[i]+'">'+name+'</td>';
 				}
 				return customColsName;
 			},
