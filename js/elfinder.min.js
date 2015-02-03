@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.x (Nightly: c2617a1) (2015-01-31)
+ * Version 2.x (Nightly: c2617a1) (2015-02-03)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
