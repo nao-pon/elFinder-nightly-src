@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1 (Nightly: a776d1c) (2015-02-01)
+ * Version 2.1 (Nightly: a776d1c) (2015-02-03)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
