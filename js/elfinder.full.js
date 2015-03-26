@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1_n (Nightly: e03357c) (2015-03-26)
+ * Version 2.1_n (Nightly: cb31af5) (2015-03-26)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -3587,7 +3587,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1_n (Nightly: e03357c)';
+elFinder.prototype.version = '2.1_n (Nightly: cb31af5)';
 
 
 
@@ -8132,7 +8132,7 @@ $.fn.elfindertree = function(fm, opts) {
 				})
 				// open dir or open subfolders in tree
 				.delegate('.'+navdir, 'click', function(e) {
-					if (!$(this).data('tap')) return;
+					if (fm.UA.Touch && !$(this).data('tap')) return;
 					$(this).data('tap', null);
 					var link = $(this),
 						hash = fm.navId2Hash(link.attr('id')),
