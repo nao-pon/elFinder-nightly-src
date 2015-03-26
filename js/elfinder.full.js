@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1 (Nightly: c185f32) (2015-03-26)
+ * Version 2.1 (Nightly: c03484c) (2015-03-27)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -341,6 +341,13 @@ window.elFinder = function(node, opts) {
 	 **/
 	this.UA = (function(){
 		var webkit = !document.uniqueID && !window.opera && !window.sidebar && window.localStorage && typeof window.orientation == "undefined";
+		var mouseCheck = function(){
+			if (!self.UA.Mouse) {
+				self.UA.Mouse = true;
+				node.off('mouseover', mouseCheck);
+			}
+		};
+		node.on('mouseover', mouseCheck);
 		return {
 			// Browser IE <= IE 6
 			ltIE6:typeof window.addEventListener == "undefined" && typeof document.documentElement.style.maxHeight == "undefined",
@@ -355,7 +362,8 @@ window.elFinder = function(node, opts) {
 			Chrome:webkit && window.chrome,
 			Safari:webkit && !window.chrome,
 			Mobile:typeof window.orientation != "undefined",
-			Touch:typeof window.ontouchstart != "undefined"
+			Touch:typeof window.ontouchstart != "undefined",
+			Mouse:false
 		};
 	})();
 	
@@ -3587,7 +3595,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1 (Nightly: c185f32)';
+elFinder.prototype.version = '2.1 (Nightly: c03484c)';
 
 
 
@@ -6366,7 +6374,7 @@ $.fn.elfindercwd = function(fm, options) {
 					scrollToView($(this));
 				})
 				.delegate(fileSelector, 'mouseenter.'+fm.namespace+' mouseleave.'+fm.namespace, function(e) {
-					if (fm.UA.Touch) return;
+					if (!fm.UA.Mouse && fm.UA.Touch) return;
 					fm.trigger('hover', {hash : $(this).attr('id'), type : e.type});
 					$(this).toggleClass(clHover);
 				})
@@ -8118,7 +8126,7 @@ $.fn.elfindertree = function(fm, opts) {
 					var link  = $(this), 
 						enter = e.type == 'mouseenter';
 					
-					if (!link.is('.'+dropover+' ,.'+disabled) && !fm.UA.Touch) {
+					if (!link.is('.'+dropover+' ,.'+disabled) && (fm.UA.Mouse || !fm.UA.Touch)) {
 						enter && !link.is('.'+root+',.'+draggable+',.elfinder-na,.elfinder-wo') && link.draggable(fm.draggable);
 						link.toggleClass(hover, enter);
 					}
@@ -8129,8 +8137,10 @@ $.fn.elfindertree = function(fm, opts) {
 				})
 				// open dir or open subfolders in tree
 				.delegate('.'+navdir, 'click', function(e) {
-					if (fm.UA.Touch && !$(this).data('tap')) return;
-					$(this).data('tap', null);
+					if ($(this).data('tap')) {
+						$(this).data('tap', null);
+						return;
+					}
 					var link = $(this),
 						hash = fm.navId2Hash(link.attr('id')),
 						file = fm.file(hash);
