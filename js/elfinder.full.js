@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1_n (Nightly: 3a0e3de) (2015-03-27)
+ * Version 2.1_n (Nightly: 69bef08) (2015-03-27)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -341,13 +341,6 @@ window.elFinder = function(node, opts) {
 	 **/
 	this.UA = (function(){
 		var webkit = !document.uniqueID && !window.opera && !window.sidebar && window.localStorage && typeof window.orientation == "undefined";
-		var mouseCheck = function(){
-			if (!self.UA.Mouse) {
-				self.UA.Mouse = true;
-				node.off('mouseover', mouseCheck);
-			}
-		};
-		node.on('mouseover', mouseCheck);
 		return {
 			// Browser IE <= IE 6
 			ltIE6:typeof window.addEventListener == "undefined" && typeof document.documentElement.style.maxHeight == "undefined",
@@ -362,8 +355,7 @@ window.elFinder = function(node, opts) {
 			Chrome:webkit && window.chrome,
 			Safari:webkit && !window.chrome,
 			Mobile:typeof window.orientation != "undefined",
-			Touch:typeof window.ontouchstart != "undefined",
-			Mouse:false
+			Touch:typeof window.ontouchstart != "undefined"
 		};
 	})();
 	
@@ -3595,7 +3587,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1_n (Nightly: 3a0e3de)';
+elFinder.prototype.version = '2.1_n (Nightly: 69bef08)';
 
 
 
@@ -5354,15 +5346,17 @@ $.fn.elfinderbutton = function(cmd) {
 $.fn.elfindercontextmenu = function(fm) {
 	
 	return this.each(function() {
-		var menu = $(this).addClass('ui-helper-reset ui-widget ui-state-default ui-corner-all elfinder-contextmenu elfinder-contextmenu-'+fm.direction)
+		var cmItem = 'elfinder-contextmenu-item',
+			menu = $(this).addClass('ui-helper-reset ui-widget ui-state-default ui-corner-all elfinder-contextmenu elfinder-contextmenu-'+fm.direction)
 				.hide()
 				.appendTo('body')
-				.delegate('.elfinder-contextmenu-item', 'mouseenter mouseleave', function() {
+				.delegate('.'+cmItem, 'mouseenter mouseleave', function() {
 					$(this).toggleClass('ui-state-hover')
 				}),
 			subpos  = fm.direction == 'ltr' ? 'left' : 'right',
 			types = $.extend({}, fm.options.contextmenu),
-			tpl     = '<div class="elfinder-contextmenu-item"><span class="elfinder-button-icon {icon} elfinder-contextmenu-icon"/><span>{label}</span></div>',
+			clItem = cmItem + (fm.UA.Touch ? ' elfinder-touch' : ''),
+			tpl     = '<div class="'+clItem+'"><span class="elfinder-button-icon {icon} elfinder-contextmenu-icon"/><span>{label}</span></div>',
 			item = function(label, icon, callback) {
 				return $(tpl.replace('{icon}', icon ? 'elfinder-button-icon-'+icon : '').replace('{label}', label))
 					.click(function(e) {
@@ -5462,7 +5456,7 @@ $.fn.elfindercontextmenu = function(fm) {
 								
 							$.each(cmd.variants, function(i, variant) {
 								submenu.append(
-									$('<div class="elfinder-contextmenu-item"><span>'+variant[1]+'</span></div>')
+									$('<div class="'+clItem+'"><span>'+variant[1]+'</span></div>')
 										.on('click touchstart', function(e) {
 											e.stopPropagation();
 											close();
@@ -6202,7 +6196,7 @@ $.fn.elfindercwd = function(fm, options) {
 
 				wrapper[list ? 'addClass' : 'removeClass']('elfinder-cwd-wrapper-list');
 
-				list && cwd.html('<table><thead><tr class="ui-state-default"><td class="elfinder-cwd-view-th-name">'+msg.name+'</td>'+customColsNameBuild()+'</tr></thead><tbody/></table>');
+				list && cwd.html('<table><thead><tr class="ui-state-default'+(fm.UA.Touch? ' elfinder-touch' : '')+'"><td class="elfinder-cwd-view-th-name">'+msg.name+'</td>'+customColsNameBuild()+'</tr></thead><tbody/></table>');
 		
 				buffer = $.map(files, function(f) { return any || f.phash == phash ? f : null; });
 				
@@ -6286,11 +6280,10 @@ $.fn.elfindercwd = function(fm, options) {
 					var p = this.id ? $(this) : $(this).parents('[id]:first'),
 					  sel = p.prevAll('.'+clSelected+':first').length +
 					        p.nextAll('.'+clSelected+':first').length;
-					fm.trigger('hover', {hash : p.attr('id'), type : 'mouseenter'});
-					p.addClass(clHover);
 					cwd.data('longtap', null);
-					p.data('touching', true);
-					p.data('tmlongtap', setTimeout(function(){
+					p.addClass(clHover)
+					.data('touching', true)
+					.data('tmlongtap', setTimeout(function(){
 						// long tap
 						cwd.data('longtap', true);
 						if (p.is('.'+clSelected) && sel > 0) {
@@ -6317,8 +6310,9 @@ $.fn.elfindercwd = function(fm, options) {
 					}
 					var p = this.id ? $(this) : $(this).parents('[id]:first');
 					clearTimeout(p.data('tmlongtap'));
-					fm.trigger('hover', {hash : p.attr('id'), type : 'mouseleave'});
-					p.removeClass(clHover);
+					if (e.type == 'touchmove') {
+						p.removeClass(clHover);
+					}
 				})
 				// attach draggable
 				.delegate(fileSelector, 'mouseenter.'+fm.namespace, function(e) {
@@ -6377,9 +6371,8 @@ $.fn.elfindercwd = function(fm, options) {
 					scrollToView($(this));
 				})
 				.delegate(fileSelector, 'mouseenter.'+fm.namespace+' mouseleave.'+fm.namespace, function(e) {
-					if (!fm.UA.Mouse && fm.UA.Touch) return;
 					fm.trigger('hover', {hash : $(this).attr('id'), type : e.type});
-					$(this).toggleClass(clHover);
+					$(this).toggleClass(clHover, (e.type == 'mouseenter'));
 				})
 				.bind('contextmenu.'+fm.namespace, function(e) {
 					var file = $(e.target).closest('.'+clFile);
@@ -7162,7 +7155,7 @@ $.fn.elfinderplaces = function(fm, opts) {
 			create    = function(dir) {
 				return $(tpl.replace(/\{id\}/, hash2id(dir.hash))
 						.replace(/\{name\}/, fm.escape(dir.name))
-						.replace(/\{cssclass\}/, fm.perms2class(dir))
+						.replace(/\{cssclass\}/, (fm.UA.Touch ? 'elfinder-touch ' : '')+fm.perms2class(dir))
 						.replace(/\{permissions\}/, !dir.read || !dir.write ? ptpl : '')
 						.replace(/\{symlink\}/, ''));
 			},
@@ -7288,8 +7281,8 @@ $.fn.elfinderplaces = function(fm, opts) {
 				.hide()
 				.append(wrapper)
 				.appendTo(fm.getUI('navbar'))
-				.delegate('.'+navdir, 'mouseenter mouseleave', function() {
-					$(this).toggleClass('ui-state-hover');
+				.delegate('.'+navdir, 'mouseenter mouseleave', function(e) {
+					$(this).toggleClass('ui-state-hover', (e.type == 'mouseenter'));
 				})
 				.delegate('.'+navdir, 'click', function(e) {
 					var p = $(this);
@@ -7339,6 +7332,7 @@ $.fn.elfinderplaces = function(fm, opts) {
 				.on('touchstart', '.'+navdir+':not(.'+clroot+')', function(e) {
 					var hash = $(this).attr('id').substr(6),
 					p = $(this)
+					.addClass(hover)
 					.data('longtap', null)
 					.data('tmlongtap', setTimeout(function(){
 						// long tap
@@ -7356,6 +7350,9 @@ $.fn.elfinderplaces = function(fm, opts) {
 				})
 				.on('touchmove touchend', '.'+navdir+':not(.'+clroot+')', function(e) {
 					clearTimeout($(this).data('tmlongtap'));
+					if (e.type == 'touchmove') {
+						$(this).removeClass(hover);
+					}
 				});
 
 		// "on regist" for command exec
@@ -8129,7 +8126,7 @@ $.fn.elfindertree = function(fm, opts) {
 					var link  = $(this), 
 						enter = e.type == 'mouseenter';
 					
-					if (!link.is('.'+dropover+' ,.'+disabled) && (fm.UA.Mouse || !fm.UA.Touch)) {
+					if (!link.is('.'+dropover+' ,.'+disabled)) {
 						enter && !link.is('.'+root+',.'+draggable+',.elfinder-na,.elfinder-wo') && link.draggable(fm.draggable);
 						link.toggleClass(hover, enter);
 					}
@@ -8140,16 +8137,12 @@ $.fn.elfindertree = function(fm, opts) {
 				})
 				// open dir or open subfolders in tree
 				.delegate('.'+navdir, 'click', function(e) {
-					if ($(this).data('tap')) {
-						$(this).data('tap', null);
-						return;
-					}
 					var link = $(this),
 						hash = fm.navId2Hash(link.attr('id')),
 						file = fm.file(hash);
 					
-					if (link.data('longtap')) {
-						e.stopPropagation();
+						if (link.data('longtap')) {
+							e.stopPropagation();
 						return;
 					}
 					
@@ -8163,10 +8156,10 @@ $.fn.elfindertree = function(fm, opts) {
 				})
 				// for touch device
 				.delegate('.'+navdir, 'touchstart', function(e) {
+					e.stopPropagation();
 					var evt = e.originalEvent,
 					p = $(this)
 					.addClass(hover)
-					.data('tap', true)
 					.data('longtap', null)
 					.data('tmlongtap', setTimeout(function(e){
 						// long tap
@@ -8180,16 +8173,10 @@ $.fn.elfindertree = function(fm, opts) {
 					}, 500));
 				})
 				.delegate('.'+navdir, 'touchmove touchend', function(e) {
-					var p = $(this);
-					clearTimeout(p.data('tmlongtap'));
-					p.removeClass(hover);
+					e.stopPropagation();
+					clearTimeout($(this).data('tmlongtap'));
 					if (e.type == 'touchmove') {
-						p.data('tap', null);
-					}
-					if (e.type == 'touchend') {
-						if (p.data('tap') && e.originalEvent.target == this) {
-							p.click();
-						}
+						$(this).removeClass(hover);
 					}
 				})
 				// toggle subfolders in tree
