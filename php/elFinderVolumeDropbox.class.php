@@ -70,6 +70,13 @@ class elFinderVolumeDropbox extends elFinderVolumeDriver {
 	 **/
 	protected $dropboxUid = '';
 	
+	/**
+	 * Dropbox download host, replaces 'www.dropbox.com' of shares URL
+	 * 
+	 * @var string
+	 */
+	private $dropbox_dlhost = 'dl.dropboxusercontent.com';
+	
 	private $dropbox_phpFound = false;
 	
 	private $DB_TableName = '';
@@ -496,19 +503,6 @@ class elFinderVolumeDropbox extends elFinderVolumeDriver {
 	}
 	
 	/**
-	 * Get local temp filename
-	 *
-	 * @return string | false
-	 * @author Naoki Sawada
-	 **/
-	protected function getLocalName($path) {
-		if ($this->tmp) {
-			return $this->tmp.DIRECTORY_SEPARATOR.md5($this->dropboxUid.$path);
-		}
-		return false;
-	}
-	
-	/**
 	 * Get delta data and DB update
 	 * 
 	 * @param boolean $refresh force refresh
@@ -656,7 +650,7 @@ class elFinderVolumeDropbox extends elFinderVolumeDriver {
 	protected function doSearch($path, $q, $mimes) {
 		$result = array();
 		$sth = $this->DB->prepare('select dat from '.$this->DB_TableName.' WHERE path LIKE ? AND fname LIKE ?');
-		$sth->execute(array('%'.(($path === $this->root)? '' : strtolower($path)), '%'.strtolower($q).'%'));
+		$sth->execute(array('%'.(($path === '/')? '' : strtolower($path)), '%'.strtolower($q).'%'));
 		$res = $sth->fetchAll(PDO::FETCH_COLUMN);
 		if ($res) {
 			foreach($res as $raw) {
@@ -729,106 +723,6 @@ class elFinderVolumeDropbox extends elFinderVolumeDriver {
 	
 		$this->removed[] = $stat;
 		return true;
-	}
-	
-	/**
-	 * Resize image
-	 *
-	 * @param  string   $hash    image file
-	 * @param  int      $width   new width
-	 * @param  int      $height  new height
-	 * @param  int      $x       X start poistion for crop
-	 * @param  int      $y       Y start poistion for crop
-	 * @param  string   $mode    action how to mainpulate image
-	 * @return array|false
-	 * @author Dmitry (dio) Levashov
-	 * @author Alexey Sukhotin
-	 * @author nao-pon
-	 * @author Troex Nevelin
-	 **/
-	public function resize($hash, $width, $height, $x, $y, $mode = 'resize', $bg = '', $degree = 0) {
-		if ($this->commandDisabled('resize')) {
-			return $this->setError(elFinder::ERROR_PERM_DENIED);
-		}
-	
-		if (($file = $this->file($hash)) == false) {
-			return $this->setError(elFinder::ERROR_FILE_NOT_FOUND);
-		}
-	
-		if (!$file['write'] || !$file['read']) {
-			return $this->setError(elFinder::ERROR_PERM_DENIED);
-		}
-	
-		$path = $this->decode($hash);
-	
-		if (!$this->canResize($path, $file)) {
-			return $this->setError(elFinder::ERROR_UNSUPPORT_TYPE);
-		}
-		
-		$path4stat = $path;
-		if (! $path = $this->getLocalName($path)) {
-			return false;
-		}
-		
-		if (! $contents = $this->_getContents($path4stat)) {
-			return false;
-		}
-		
-		if (! @ file_put_contents($path, $contents, LOCK_EX)) {
-			return false;
-		}
-		
-		switch($mode) {
-				
-			case 'propresize':
-				$result = $this->imgResize($path, $width, $height, true, true);
-				break;
-	
-			case 'crop':
-				$result = $this->imgCrop($path, $width, $height, $x, $y);
-				break;
-	
-			case 'fitsquare':
-				$result = $this->imgSquareFit($path, $width, $height, 'center', 'middle', ($bg ? $bg : $this->options['tmbBgColor']));
-				break;
-	
-			case 'rotate':
-				$result = $this->imgRotate($path, $degree, ($bg ? $bg : $this->options['tmbBgColor']));
-				break;
-	
-			default:
-				$result = $this->imgResize($path, $width, $height, false, true);
-				break;
-		}
-		
-		$result && $size = getimagesize($path);
-		
-		if ($result) {
-			clearstatcache();
-			$size = getimagesize($path);
-			if ($fp = @fopen($path, 'rb')) {
-				$res = $this->_save($fp, $path4stat, '', array());
-				@fclose($fp);
-	
-				file_exists($path) && @unlink($path);
-				
-				$this->rmTmb($file);
-				$this->clearcache();
-				
-				if ($size) {
-					$raw = $this->getDBdat($path4stat);
-					$raw['width'] = $size[0];
-					$raw['height'] = $size[1];
-					$this->updateDBdat($path4stat, $raw);
-				}
-				
-				return $this->stat($path4stat);
-			}
-		}
-		
-		is_file($path) && @unlink($path);
-		
-		return false;
 	}
 	
 	/**
@@ -935,41 +829,33 @@ class elFinderVolumeDropbox extends elFinderVolumeDriver {
 			$path = $this->decode($hash);
 			$cache = $this->getDBdat($path);
 			$url = '';
-			if (isset($cache['share'])) {
+			if (isset($cache['share']) && strpos($cache['share'], $this->dropbox_dlhost) !== false) {
 				$res = $this->getHttpResponseHeader($cache['share']);
 				if (preg_match("/^HTTP\/[01\.]+ ([0-9]{3})/", $res, $match)) {
-					if (preg_match('/^location:\s*(http[^\s]+)/im', $res, $match)) {
-						$url = $match[1];
-					} else if ($match[1] >= 400) {
-						$url = '';
+					if ($match[1] < 400) {
+						$url = $cache['share'];
 					}
-				} else {
-					$url = '';
 				}
 			}
 			if (! $url) {
 				try {
-					$res = $this->dropbox->share($path);
-					$res = $this->getHttpResponseHeader($res['url']);
-					if (preg_match('/^location:\s*(http[^\s]+)/im', $res, $match)) {
-						$url = $match[1] . '?dl=1';
-					}
-					if ($url) {
-						if (! isset($cache['share']) || $cache['share'] !== $url) {
-							$cache['share'] = $url;
-							$this->updateDBdat($path, $cache);
-						}
+					$res = $this->dropbox->share($path, null, false);
+					$url = $res['url'];
+					if (strpos($url, 'www.dropbox.com') === false) {
 						$res = $this->getHttpResponseHeader($url);
-						if (preg_match('/^location:\s*(http[^\s?]+)/im', $res, $match)) {
+						if (preg_match('/^location:\s*(http[^\s]+)/im', $res, $match)) {
 							$url = $match[1];
 						}
+					}
+					list($url) = explode('?', $url);
+					$url = str_replace('www.dropbox.com', $this->dropbox_dlhost, $url);
+					if (! isset($cache['share']) || $cache['share'] !== $url) {
+						$cache['share'] = $url;
+						$this->updateDBdat($path, $cache);
 					}
 				} catch (Dropbox_Exception $e) {
 					return false;
 				}
-			}
-			if ($url) {
-				list($url) = explode('?', $url);
 			}
 			return $url;
 		}
@@ -1169,19 +1055,17 @@ class elFinderVolumeDropbox extends elFinderVolumeDriver {
 		if (isset($cache['width']) && isset($cache['height'])) {
 			return $cache['width'].'x'.$cache['height'];
 		}
-		if ($local = $this->getLocalName($path)) {
-			if (file_put_contents($local, $this->dropbox->getFile($path), LOCK_EX)) {
-				if ($size = @getimagesize($local)) {
-					$cache['width'] = $size[0];
-					$cache['height'] = $size[1];
-					$this->updateDBdat($path, $cache);
-					unlink($local);
-					return $size[0].'x'.$size[1];
-				}
-				unlink($local);
+		$ret = '';
+		if ($work = $this->getWorkFile($path)) {
+			if ($size = @getimagesize($work)) {
+				$cache['width'] = $size[0];
+				$cache['height'] = $size[1];
+				$this->updateDBdat($path, $cache);
+				$ret = $size[0].'x'.$size[1];
 			}
 		}
-		return '';
+		is_file($work) && @unlink($work);
+		return $ret;
 	}
 
 	/******************** file/dir content *********************/
@@ -1232,7 +1116,7 @@ class elFinderVolumeDropbox extends elFinderVolumeDriver {
 				return false;
 			}
 			
-			if ($local = $this->getLocalName($path)) {
+			if ($local = $this->getTempFile($path)) {
 				if (file_put_contents($local, $contents, LOCK_EX) !== false) {
 					return @fopen($local, $mode);
 				}
@@ -1252,7 +1136,7 @@ class elFinderVolumeDropbox extends elFinderVolumeDriver {
 	protected function _fclose($fp, $path='') {
 		@fclose($fp);
 		if ($path) {
-			@unlink($this->getLocalName($path));
+			@unlink($this->getTempFile($path));
 		}
 	}
 
@@ -1394,6 +1278,12 @@ class elFinderVolumeDropbox extends elFinderVolumeDriver {
 			return $this->setError('Dropbox error: '.$e->getMessage());
 		}
 		$this->deltaCheck();
+		if (is_array($stat)) {
+			$raw = $this->getDBdat($path);
+			if (isset($stat['width'])) $raw['width'] = $stat['width'];
+			if (isset($stat['height'])) $raw['height'] = $stat['height'];
+			$this->updateDBdat($path, $raw);
+		}
 		return $path;
 	}
 
@@ -1425,9 +1315,7 @@ class elFinderVolumeDropbox extends elFinderVolumeDriver {
 	protected function _filePutContents($path, $content) {
 		$res = false;
 
-		if ($local = $this->getLocalName($path)) {
-			$local .= '.txt';
-
+		if ($local = $this->getTempFile($path)) {
 			if (@file_put_contents($local, $content, LOCK_EX) !== false
 			&& ($fp = @fopen($local, 'rb'))) {
 				clearstatcache();
