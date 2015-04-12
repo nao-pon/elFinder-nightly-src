@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1_n (Nightly: 3e0e1c9) (2015-03-28)
+ * Version 2.1_n (Nightly: 10646ab) (2015-04-12)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -3587,7 +3587,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1_n (Nightly: 3e0e1c9)';
+elFinder.prototype.version = '2.1_n (Nightly: 10646ab)';
 
 
 
@@ -7125,6 +7125,7 @@ $.fn.elfinderplaces = function(fm, opts) {
 			tpl       = fm.res('tpl', 'navdir'),
 			ptpl      = fm.res('tpl', 'perms'),
 			spinner   = $(fm.res('tpl', 'navspinner')),
+			key       = 'places'+(opts.suffix? opts.suffix : ''),
 			/**
 			 * Convert places dir node into dir hash
 			 *
@@ -7145,7 +7146,7 @@ $.fn.elfinderplaces = function(fm, opts) {
 			 *
 			 * @return void
 			 **/
-			save      = function() { fm.storage('places', dirs.join(',')); },
+			save      = function() { fm.storage(key, dirs.join(',')); },
 			/**
 			 * Return node for given dir object
 			 *
@@ -7374,7 +7375,7 @@ $.fn.elfinderplaces = function(fm, opts) {
 			
 			places.show().parent().show();
 
-			dirs = $.map((fm.storage('places') || '').split(','), function(hash) { return hash || null;});
+			dirs = $.map((fm.storage(key) || '').split(','), function(hash) { return hash || null;});
 			
 			if (dirs.length) {
 				root.prepend(spinner);
@@ -12439,7 +12440,7 @@ elFinder.prototype.commands.sort = function() {
 		});
 	});
 	
-	fm.bind('open sortchange viewchange', function() {
+	fm.bind('open sortchange viewchange search searchend', function() {
 		var timer = null;
 		timer && clearTimeout(timer);
 		timer = setTimeout(function(){
@@ -12454,8 +12455,9 @@ elFinder.prototype.commands.sort = function() {
 							order : current ? fm.sortOrder == 'asc' ? 'desc' : 'asc' : fm.sortOrder
 						},arr;
 						if (current) {
+							td.addClass('ui-state-active');
 							arr = fm.sortOrder == 'asc' ? 'n' : 's';
-							$('<span class="ui-icon ui-icon-triangle-1-'+arr+'"/>').css({left:'+center+'}).appendTo(td);
+							$('<span class="ui-icon ui-icon-triangle-1-'+arr+'"/>').appendTo(td);
 						}
 						$(td).on('click', function(e){
 							e.stopPropagation();
