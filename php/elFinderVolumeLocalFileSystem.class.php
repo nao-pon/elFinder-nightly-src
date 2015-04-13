@@ -44,12 +44,29 @@ class elFinderVolumeLocalFileSystem extends elFinderVolumeDriver {
 		$this->options['fileMode'] = 0644;            // new files mode
 		$this->options['quarantine'] = '.quarantine';  // quarantine folder name - required to check archive (must be hidden)
 		$this->options['maxArcFilesSize'] = 0;        // max allowed archive files size (0 - no limit)
-		$this->options['icon']     = (defined('ELFINDER_IMG_PARENT_URL')? (rtrim(ELFINDER_IMG_PARENT_URL, '/').'/') : '').'img/volume_icon_local.png';
 	}
 	
 	/*********************************************************************/
 	/*                        INIT AND CONFIGURE                         */
 	/*********************************************************************/
+	
+	/**
+	 * Prepare driver before mount volume.
+	 * Return true if volume is ready.
+	 *
+	 * @return bool
+	 **/
+	protected function init() {
+		// Normalize directory separator for windows
+		if (DIRECTORY_SEPARATOR !== '/') {
+			foreach(array('path', 'tmbPath', 'quarantine') as $key) {
+				if ($this->options[$key]) {
+					$this->options[$key] = str_replace('/', DIRECTORY_SEPARATOR, $this->options[$key]);
+				}
+			}
+		}
+		return true;
+	}
 	
 	/**
 	 * Configure after successfull mount.
@@ -65,7 +82,7 @@ class elFinderVolumeLocalFileSystem extends elFinderVolumeDriver {
 		if ($this->options['tmbPath']) {
 			$this->options['tmbPath'] = strpos($this->options['tmbPath'], DIRECTORY_SEPARATOR) === false
 				// tmb path set as dirname under root dir
-				? $this->root.DIRECTORY_SEPARATOR.$this->options['tmbPath']
+				? $this->_abspath($this->options['tmbPath'])
 				// tmb path as full path
 				: $this->_normpath($this->options['tmbPath']);
 		}
@@ -91,7 +108,7 @@ class elFinderVolumeLocalFileSystem extends elFinderVolumeDriver {
 				}
 				$this->options['quarantine'] = '';
 			} else {
-				$this->quarantine = $this->root.DIRECTORY_SEPARATOR.$this->options['quarantine'];
+				$this->quarantine = $this->_abspath($this->options['quarantine']);
 				if ((!is_dir($this->quarantine) && !$this->_mkdir($this->root, $this->options['quarantine'])) || !is_writable($this->quarantine)) {
 					$this->options['quarantine'] = $this->quarantine = '';
 				}
@@ -165,6 +182,11 @@ class elFinderVolumeLocalFileSystem extends elFinderVolumeDriver {
 		if (empty($path)) {
 			return '.';
 		}
+		
+		$changeSep = (DIRECTORY_SEPARATOR !== '/');
+		if ($changeSep) {
+			$path = str_replace(DIRECTORY_SEPARATOR, '/', $path);
+		}
 
 		if (strpos($path, '/') === 0) {
 			$initial_slashes = true;
@@ -199,6 +221,10 @@ class elFinderVolumeLocalFileSystem extends elFinderVolumeDriver {
 		$path = implode('/', $comps);
 		if ($initial_slashes) {
 			$path = str_repeat('/', $initial_slashes) . $path;
+		}
+		
+		if ($changeSep) {
+			$path = str_replace('/', DIRECTORY_SEPARATOR, $path);
 		}
 		
 		return $path ? $path : '.';
@@ -249,7 +275,7 @@ class elFinderVolumeLocalFileSystem extends elFinderVolumeDriver {
 		$real_path = realpath($path);
 		$real_parent = realpath($parent);
 		if ($real_path && $real_parent) {
-			return $real_path === $real_parent || strpos($real_path, $real_parent.DIRECTORY_SEPARATOR) === 0;
+			return $real_path === $real_parent || strpos($real_path, rtrim($real_parent, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR) === 0;
 		}
 		return false;
 	}
@@ -306,9 +332,9 @@ class elFinderVolumeLocalFileSystem extends elFinderVolumeDriver {
 			$stat['target'] = $target;
 			$path  = $target;
 			$lstat = lstat($path);
-			$size  = sprintf('%u', $lstat['size']);
+			$size  = $lstat['size'];
 		} else {
-			$size = sprintf('%u', @filesize($path));
+			$size = @filesize($path);
 		}
 		
 		$dir = is_dir($path);
@@ -630,19 +656,18 @@ class elFinderVolumeLocalFileSystem extends elFinderVolumeDriver {
 				if ($name != '.' && $name != '..') {
 					$p = $path.DIRECTORY_SEPARATOR.$name;
 					if (is_link($p) || !$this->nameAccepted($name)) {
-						$this->setError(elFinder::ERROR_SAVE, $name);
 						return true;
 					}
 					if (is_dir($p) && $this->_findSymlinks($p)) {
 						return true;
 					} elseif (is_file($p)) {
-						$this->archiveSize += sprintf('%u', filesize($p));
+						$this->archiveSize += filesize($p);
 					}
 				}
 			}
 		} else {
 			
-			$this->archiveSize += sprintf('%u', filesize($path));
+			$this->archiveSize += filesize($path);
 		}
 		
 		return false;
@@ -660,16 +685,12 @@ class elFinderVolumeLocalFileSystem extends elFinderVolumeDriver {
 	protected function _extract($path, $arc) {
 		
 		if ($this->quarantine) {
-
-			$dir     = $this->quarantine.DIRECTORY_SEPARATOR.md5(basename($path).mt_rand());
+			$dir     = $this->quarantine.DIRECTORY_SEPARATOR.str_replace(' ', '_', microtime()).basename($path);
 			$archive = $dir.DIRECTORY_SEPARATOR.basename($path);
 			
 			if (!@mkdir($dir)) {
 				return false;
 			}
-			
-			// insurance unexpected shutdown
-			register_shutdown_function(array($this, 'rmdirRecursive'), realpath($dir));
 			
 			chmod($dir, 0777);
 			
@@ -699,26 +720,29 @@ class elFinderVolumeLocalFileSystem extends elFinderVolumeDriver {
 			
 			// find symlinks
 			$symlinks = $this->_findSymlinks($dir);
+			// remove arc copy
+			$this->remove($dir);
 			
 			if ($symlinks) {
-				$this->delTree($dir);
-				return $this->setError(array_merge($this->error, array(elFinder::ERROR_ARC_SYMLINKS)));
+				return $this->setError(elFinder::ERROR_ARC_SYMLINKS);
 			}
 
 			// check max files size
 			if ($this->options['maxArcFilesSize'] > 0 && $this->options['maxArcFilesSize'] < $this->archiveSize) {
-				$this->delTree($dir);
 				return $this->setError(elFinder::ERROR_ARC_MAXSIZE);
 			}
 			
+			
+			
 			// archive contains one item - extract in archive dir
-			$src = $dir.DIRECTORY_SEPARATOR.$ls[0];
-			if (count($ls) === 1 && is_file($src)) {
-				$name = $ls[0];
+			if (count($ls) == 1) {
+				$this->_unpack($path, $arc);
+				$result = dirname($path).DIRECTORY_SEPARATOR.$ls[0];
+				
+
 			} else {
 				// for several files - create new directory
 				// create unique name for directory
-				$src = $dir;
 				$name = basename($path);
 				if (preg_match('/\.((tar\.(gz|bz|bz2|z|lzo))|cpio\.gz|ps\.gz|xcf\.(gz|bz2)|[a-z0-9]{1,4})$/i', $name, $m)) {
 					$name = substr($name, 0,  strlen($name)-strlen($m[0]));
@@ -727,16 +751,17 @@ class elFinderVolumeLocalFileSystem extends elFinderVolumeDriver {
 				if (file_exists($test) || is_link($test)) {
 					$name = $this->uniqueName(dirname($path), $name, '-', false);
 				}
-			}
-			
-			$result  = dirname($path).DIRECTORY_SEPARATOR.$name;
+				
+				$result  = dirname($path).DIRECTORY_SEPARATOR.$name;
+				$archive = $result.DIRECTORY_SEPARATOR.basename($path);
 
-			if (! @rename($src, $result)) {
-				$this->delTree($dir);
-				return false;
+				if (!$this->_mkdir(dirname($path), $name) || !copy($path, $archive)) {
+					return false;
+				}
+				
+				$this->_unpack($archive, $arc);
+				@unlink($archive);
 			}
-			
-			is_dir($dir) && $this->delTree($dir);
 			
 			return file_exists($result) ? $result : false;
 		}
@@ -767,28 +792,4 @@ class elFinderVolumeLocalFileSystem extends elFinderVolumeDriver {
 		return file_exists($path) ? $path : false;
 	}
 	
-	/******************** Over write functions *************************/
-	
-	/**
-	 * File path of local server side work file path
-	 *
-	 * @param  string $path
-	 * @return string
-	 * @author Naoki Sawada
-	 */
-	protected function getWorkFile($path) {
-		return $path;
-	}
-
-	/**
-	 * Delete dirctory trees
-	 *
-	 * @param string $localpath path need convert encoding to server encoding
-	 * @return boolean
-	 * @author Naoki Sawada
-	 */
-	protected function delTree($localpath) {
-		return $this->rmdirRecursive($localpath);
-	}
-
 } // END class 
