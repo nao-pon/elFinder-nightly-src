@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1 (Nightly: c1fe954) (2015-05-20)
+ * Version 2.1 (Nightly: a14c7fa) (2015-05-21)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -3587,7 +3587,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1 (Nightly: c1fe954)';
+elFinder.prototype.version = '2.1 (Nightly: a14c7fa)';
 
 
 
@@ -5005,6 +5005,10 @@ if (elFinder && elFinder.prototype && typeof(elFinder.prototype.i18) == 'object'
 			'btnApprove': 'Goto $1 & approve', // added 26.04.2012
 			'btnUnmount': 'Unmount', // added 30.04.2012
 			'btnConv'   : 'Convert', // added 08.04.2014
+			'btnCwd'    : 'Here',      // from v2.1 added 22.5.2015
+			'btnVolume' : 'Volume',    // from v2.1 added 22.5.2015
+			'btnAll'    : 'All',       // from v2.1 added 22.5.2015
+			'btnMime'   : 'MIME Type', // from v2.1 added 22.5.2015
 			
 			/******************************** notifications ********************************/
 			'ntfopen'     : 'Open folder',
@@ -5165,6 +5169,8 @@ if (elFinder && elFinder.prototype && typeof(elFinder.prototype.i18) == 'object'
 			'dropPasteFiles'  : 'Drop or Paste files here', // added 07.04.2014
 			'encoding'        : 'Encoding', // from v2.1 added 19.12.2014
 			'locale'          : 'Locale',   // from v2.1 added 19.12.2014
+			'searchTarget'    : 'Target: $1',                // from v2.1 added 22.5.2015
+			'searchMime'      : 'Search by input MIME Type', // from v2.1 added 22.5.2015
 
 			/********************************** mimetypes **********************************/
 			'kindUnknown'     : 'Unknown',
@@ -7086,7 +7092,7 @@ $.fn.elfinderpath = function(fm) {
 				})
 				.prependTo(fm.getUI('statusbar').show())
 
-			fm.bind('open searchend', function() {
+			fm.bind('open searchend parents', function() {
 				var dirs = [];
 
 				$.each(fm.parents(fm.cwd().hash), function(i, hash) {
@@ -7451,27 +7457,54 @@ $.fn.elfinderplaces = function(fm, opts) {
 $.fn.elfindersearchbutton = function(cmd) {
 	return this.each(function() {
 		var result = false,
-			button = $(this).hide().addClass('ui-widget-content elfinder-button '+cmd.fm.res('class', 'searchbtn')+''),
+			fm     = cmd.fm,
+			id     = function(name){return fm.namespace + name},
+			timer  = null,
+			button = $(this).hide().addClass('ui-widget-content elfinder-button '+fm.res('class', 'searchbtn')+''),
 			search = function() {
-				var val = $.trim(input.val());
+				opts.slideUp();
+				var val = $.trim(input.val()),
+					from = !$('#' + id('SearchFromAll')).prop('checked'),
+					mime = $('#' + id('SearchMime')).prop('checked');
+				if (from) {
+					if ($('#' + id('SearchFromVol')).prop('checked')) {
+						from = fm.root(fm.cwd().hash);
+					} else {
+						from = fm.cwd().hash;
+					}
+				}
+				if (mime) {
+					mime = val;
+					val = '.';
+				}
 				if (val) {
-					cmd.exec(val).done(function() {
+					cmd.exec(val, from, mime).done(function() {
 						result = true;
 						input.focus();
 					});
 					
 				} else {
-					cmd.fm.trigger('searchend');
+					fm.trigger('searchend');
 				}
 			},
 			abort = function() {
+				opts.slideUp();
 				input.val('');
 				if (result) {
 					result = false;
-					cmd.fm.trigger('searchend');
+					fm.trigger('searchend');
 				}
 			},
 			input  = $('<input type="text" size="42"/>')
+				.focus(function(){
+					timer && clearTimeout(timer);
+					opts.slideDown();
+				})
+				.blur(function(){
+					timer = setTimeout(function(){
+						opts.slideUp();
+					}, 500);
+				})
 				.appendTo(button)
 				// to avoid fm shortcuts on arrows
 				.keypress(function(e) {
@@ -7486,7 +7519,19 @@ $.fn.elfindersearchbutton = function(cmd) {
 						e.preventDefault();
 						abort();
 					}
-				});
+				}),
+			opts = $('<div class="ui-widget ui-widget-content elfinder-button-menu ui-corner-all"/>')
+				.append($('<div class="buttonset"/>')
+					.append($('<input id="'+id('SearchFromCwd')+'" name="serchfrom" type="radio" checked="checked"/><label for="'+id('SearchFromCwd')+'">'+fm.i18n('btnCwd')+'</label>'))
+					.append($('<input id="'+id('SearchFromVol')+'" name="serchfrom" type="radio"/><label for="'+id('SearchFromVol')+'">'+fm.i18n('btnVolume')+'</label>'))
+					.append($('<input id="'+id('SearchFromAll')+'" name="serchfrom" type="radio"/><label for="'+id('SearchFromAll')+'">'+fm.i18n('btnAll')+'</label>'))
+				)
+				.append($('<div class="button"/>').
+					append($('<input id="'+id('SearchMime')+'" type="checkbox"/><label for="'+id('SearchMime')+'">'+fm.i18n('btnMime')+'</label>'))
+				)
+				.hide()
+				.zIndex(12+button.zIndex())
+				.appendTo(button);
 		
 		$('<span class="ui-icon ui-icon-search" title="'+cmd.title+'"/>')
 			.appendTo(button)
@@ -7496,13 +7541,23 @@ $.fn.elfindersearchbutton = function(cmd) {
 			.appendTo(button)
 			.click(abort);
 		
+		$(function(){
+			opts.find('div.buttonset').buttonset();
+			opts.find('div.button input').button();
+			$('#'+id('SearchFromAll')).next('label').attr('title', fm.i18n('searchTarget', fm.i18n('btnAll')));
+			$('#'+id('SearchMime')).next('label').attr('title', fm.i18n('searchMime'));
+			opts.find('input').on('click', function(){
+				input.focus();
+			});
+		});
+		
 		// wait when button will be added to DOM
 		setTimeout(function() {
 			button.parent().detach();
-			cmd.fm.getUI('toolbar').prepend(button.show());
+			fm.getUI('toolbar').prepend(button.show());
 			// position icons for ie7
-			if (cmd.fm.UA.ltIE7) {
-				var icon = button.children(cmd.fm.direction == 'ltr' ? '.ui-icon-close' : '.ui-icon-search');
+			if (fm.UA.ltIE7) {
+				var icon = button.children(fm.direction == 'ltr' ? '.ui-icon-close' : '.ui-icon-search');
 				icon.css({
 					right : '',
 					left  : parseInt(button.width())-icon.outerWidth(true)
@@ -7510,12 +7565,23 @@ $.fn.elfindersearchbutton = function(cmd) {
 			}
 		}, 200);
 		
-		cmd.fm
+		fm
 			.select(function() {
 				input.blur();
 			})
 			.bind('searchend', function() {
 				input.val('');
+			})
+			.bind('open parents', function() {
+				var dirs    = [],
+					volroot = fm.file(fm.root(fm.cwd().hash));
+				
+				$.each(fm.parents(fm.cwd().hash), function(i, hash) {
+					dirs.push(fm.file(hash).name);
+				});
+	
+				$('#'+id('SearchFromCwd')).next('label').attr('title', fm.i18n('searchTarget', dirs.join(fm.option('separator'))));
+				$('#'+id('SearchFromVol')).next('label').attr('title', fm.i18n('searchTarget', volroot.name));
 			})
 			.shortcut({
 				pattern     : 'ctrl+f f3',
@@ -12298,14 +12364,16 @@ elFinder.prototype.commands.search = function() {
 	 * @param  String  search string
 	 * @return $.Deferred
 	 **/
-	this.exec = function(q) {
+	this.exec = function(q, target, mime) {
 		var fm = this.fm;
 		
 		if (typeof(q) == 'string' && q) {
-			fm.trigger('searchstart', {query : q});
+			target = target += '';
+			mime = mime? [mime+''] : [];
+			fm.trigger('searchstart', {query : q, target : target, mimes : mime});
 			
 			return fm.request({
-				data   : {cmd : 'search', q : q},
+				data   : {cmd : 'search', q : q, target : target, mimes : mime},
 				notify : {type : 'search', cnt : 1, hideCnt : true}
 			});
 		}
