@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1_n (Nightly: b91a1ba) (2015-05-22)
+ * Version 2.1_n (Nightly: 8b565d5) (2015-05-22)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -3587,7 +3587,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1_n (Nightly: b91a1ba)';
+elFinder.prototype.version = '2.1_n (Nightly: 8b565d5)';
 
 
 
@@ -5012,6 +5012,7 @@ if (elFinder && elFinder.prototype && typeof(elFinder.prototype.i18) == 'object'
 			'btnVolume' : 'Volume',    // from v2.1 added 22.5.2015
 			'btnAll'    : 'All',       // from v2.1 added 22.5.2015
 			'btnMime'   : 'MIME Type', // from v2.1 added 22.5.2015
+			'btnFileName':'Filename',  // from v2.1 added 22.5.2015
 			
 			/******************************** notifications ********************************/
 			'ntfopen'     : 'Open folder',
@@ -7529,8 +7530,9 @@ $.fn.elfindersearchbutton = function(cmd) {
 					.append($('<input id="'+id('SearchFromVol')+'" name="serchfrom" type="radio"/><label for="'+id('SearchFromVol')+'">'+fm.i18n('btnVolume')+'</label>'))
 					.append($('<input id="'+id('SearchFromAll')+'" name="serchfrom" type="radio"/><label for="'+id('SearchFromAll')+'">'+fm.i18n('btnAll')+'</label>'))
 				)
-				.append($('<div class="button"/>').
-					append($('<input id="'+id('SearchMime')+'" type="checkbox"/><label for="'+id('SearchMime')+'">'+fm.i18n('btnMime')+'</label>'))
+				.append($('<div class="buttonset"/>')
+					.append($('<input id="'+id('SearchName')+'" name="serchcol" type="radio" checked="checked"/><label for="'+id('SearchName')+'">'+fm.i18n('btnFileName')+'</label>'))
+					.append($('<input id="'+id('SearchMime')+'" name="serchcol" type="radio"/><label for="'+id('SearchMime')+'">'+fm.i18n('btnMime')+'</label>'))
 				)
 				.hide()
 				.zIndex(12+button.zIndex())
@@ -7546,11 +7548,12 @@ $.fn.elfindersearchbutton = function(cmd) {
 		
 		$(function(){
 			opts.find('div.buttonset').buttonset();
-			opts.find('div.button input').button();
+			//opts.find('div.button input').button();
 			$('#'+id('SearchFromAll')).next('label').attr('title', fm.i18n('searchTarget', fm.i18n('btnAll')));
 			$('#'+id('SearchMime')).next('label').attr('title', fm.i18n('searchMime'));
 			opts.find('input').on('click', function(){
 				input.focus();
+				$.trim(input.val()) && search();
 			});
 		});
 		
