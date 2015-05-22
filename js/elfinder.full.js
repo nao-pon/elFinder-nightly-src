@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1 (Nightly: 5acce56) (2015-05-22)
+ * Version 2.1 (Nightly: d6c5e7e) (2015-05-22)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -3587,7 +3587,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1 (Nightly: 5acce56)';
+elFinder.prototype.version = '2.1 (Nightly: d6c5e7e)';
 
 
 
@@ -7498,13 +7498,14 @@ $.fn.elfindersearchbutton = function(cmd) {
 			},
 			input  = $('<input type="text" size="42"/>')
 				.focus(function(){
-					timer && clearTimeout(timer);
 					opts.slideDown();
 				})
 				.blur(function(){
-					timer = setTimeout(function(){
+					if (!opts.data('infocus')) {
 						opts.slideUp();
-					}, 500);
+					} else {
+						opts.data('infocus', false);
+					}
 				})
 				.appendTo(button)
 				// to avoid fm shortcuts on arrows
@@ -7548,8 +7549,11 @@ $.fn.elfindersearchbutton = function(cmd) {
 			//opts.find('div.button input').button();
 			$('#'+id('SearchFromAll')).next('label').attr('title', fm.i18n('searchTarget', fm.i18n('btnAll')));
 			$('#'+id('SearchMime')).next('label').attr('title', fm.i18n('searchMime'));
-			opts.find('input').on('click', function(){
-				input.focus();
+			opts.find('input')
+			.on('mousedown', function(){
+				opts.data('infocus', true);
+			})
+			.on('click', function(){
 				$.trim(input.val()) && search();
 			});
 		});
