@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.x_n (Nightly: 405a28a) (2015-05-29)
+ * Version 2.x_n (Nightly: e425cfc) (2015-05-29)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -3319,7 +3319,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.x_n (Nightly: 405a28a)';
+elFinder.prototype.version = '2.x_n (Nightly: e425cfc)';
 
 
 
@@ -9099,7 +9099,7 @@ elFinder.prototype.commands.info = function() {
 				} else {
 					href = fm.url(file.hash);
 				}
-				content.push(row.replace(l, msg.link).replace(v,  '<a href="'+href+'" target="_blank">'+file.name+'</a>'));
+				content.push(row.replace(l, msg.link).replace(v,  '<a href="'+href+'" target="_blank">'+fm.escape(file.name)+'</a>'));
 			}
 			
 			if (file.dim) { // old api
@@ -10122,7 +10122,7 @@ elFinder.prototype.commands.quicklook = function() {
 				title.html(fm.escape(file.name));
 				
 				info.html(
-						tpl.replace(/\{value\}/, file.name)
+						tpl.replace(/\{value\}/, fm.escape(file.name))
 						+ tpl.replace(/\{value\}/, fm.mime2kind(file))
 						+ (file.mime == 'directory' ? '' : tpl.replace(/\{value\}/, fm.formatSize(file.size)))
 						+ tpl.replace(/\{value\}/, fm.i18n('modify')+': '+ fm.formatDate(file))
