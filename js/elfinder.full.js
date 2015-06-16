@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1 (Nightly: 7b47cb8) (2015-06-14)
+ * Version 2.1 (Nightly: e9f7f90) (2015-06-16)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -3587,7 +3587,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1 (Nightly: 7b47cb8)';
+elFinder.prototype.version = '2.1 (Nightly: e9f7f90)';
 
 
 
@@ -8527,7 +8527,8 @@ $.fn.elfinderworkzone = function(fm) {
 elFinder.prototype.commands.archive = function() {
 	var self  = this,
 		fm    = self.fm,
-		mimes = [];
+		mimes = [],
+		dfrd;
 		
 	this.variants = [];
 	
@@ -8547,7 +8548,7 @@ elFinder.prototype.commands.archive = function() {
 	});
 	
 	this.getstate = function() {
-		return !this._disabled && mimes.length && (fm.selected().length || dfrd.state() == 'pending') && fm.cwd().write ? 0 : -1;
+		return !this._disabled && mimes.length && (fm.selected().length || (dfrd && dfrd.state() == 'pending')) && fm.cwd().write ? 0 : -1;
 	}
 	
 	this.exec = function(hashes, type) {
@@ -8556,10 +8557,11 @@ elFinder.prototype.commands.archive = function() {
 			mime  = type || mimes[0],
 			cwd   = fm.cwd(),
 			error = ['errArchive', 'errPerm', 'errCreatingTempDir', 'errFtpDownloadFile', 'errFtpUploadFile', 'errFtpMkdir', 'errArchiveExec', 'errExtractExec', 'errRm'],
-			dfrd  = $.Deferred().fail(function(error) {
-				error && fm.error(error);
-			}), 
-			i;
+			i, makeDfrd;
+
+		dfrd = $.Deferred().fail(function(error) {
+			error && fm.error(error);
+		});
 
 		if (!(this.enabled() && cnt && mimes.length && $.inArray(mime, mimes) !== -1)) {
 			return dfrd.reject();
@@ -8578,7 +8580,9 @@ elFinder.prototype.commands.archive = function() {
 		self.mime   = mime;
 		self.prefix = ((cnt > 1)? 'Archive' : files[0].name) + '.' + fm.option('archivers')['createext'][mime];
 		self.data   = {targets : self.hashes(hashes), type : mime};
-		return $.proxy(fm.res('mixin', 'make'), self)();
+		makeDfrd = $.proxy(fm.res('mixin', 'make'), self)();
+		dfrd.reject();
+		return makeDfrd;
 	}
 
 }
