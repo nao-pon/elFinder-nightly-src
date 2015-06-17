@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1 (Nightly: 8b0bad4) (2015-06-16)
+ * Version 2.1 (Nightly: 9716e35) (2015-06-17)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -1440,7 +1440,11 @@ window.elFinder = function(node, opts) {
 	 * @return jQuery
 	 */
 	this.dialog = function(content, options) {
-		return $('<div/>').append(content).appendTo(node).elfinderdialog(options);
+		var dialog = $('<div/>').append(content).appendTo(node).elfinderdialog(options);
+		this.bind('resize', function(){
+			dialog.elfinderdialog('posInit');
+		});
+		return dialog;
 	}
 	
 	/**
@@ -1761,11 +1765,11 @@ window.elFinder = function(node, opts) {
 		// notification dialog window
 		notify : this.dialog('', {
 			cssClass  : 'elfinder-dialog-notify',
-			position  : {top : '12px', right : '12px'},
+			position  : this.options.notifyDialog.position,
 			resizable : false,
 			autoOpen  : false,
 			title     : '&nbsp;',
-			width     : 280
+			width     : parseInt(this.options.notifyDialog.width)
 		}),
 		statusbar : $('<div class="ui-widget-header ui-helper-clearfix ui-corner-bottom elfinder-statusbar"/>').hide().appendTo(node)
 	}
@@ -3587,7 +3591,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1 (Nightly: 8b0bad4)';
+elFinder.prototype.version = '2.1 (Nightly: 9716e35)';
 
 
 
@@ -4099,6 +4103,15 @@ elFinder.prototype._options = {
 	 * @default  500 (.5 sec)
 	 */
 	notifyDelay : 500,
+	
+	/**
+	 * Position CSS, Width of notifications dialogs
+	 *
+	 * @type Object
+	 * @default {position: {top : '12px', right : '12px'}, width : 280}
+	 * position: CSS object | null (null: position center & middle)
+	 */
+	notifyDialog : {position: {top : '12px', right : '12px'}, width : 280},
 	
 	/**
 	 * Allow shortcuts
@@ -6317,6 +6330,8 @@ $.fn.elfinderdialog = function(opts) {
 			dialog.hide().remove();
 		} else if (opts == 'toTop') {
 			dialog.trigger('totop');
+		} else if (opts == 'posInit') {
+			dialog.trigger('posinit');
 		}
 	}
 	
@@ -6340,8 +6355,13 @@ $.fn.elfinderdialog = function(opts) {
 				.hide()
 				.append(self)
 				.appendTo(parent)
-				.draggable({ handle : '.ui-dialog-titlebar',
-					     containment : 'document' })
+				.draggable({
+					handle : '.ui-dialog-titlebar',
+					containment : 'document',
+					stop : function(e, ui){
+						dialog.css({height : opts.height});
+					}
+				})
 				.css({
 					width  : opts.width,
 					height : opts.height//,
@@ -6421,6 +6441,16 @@ $.fn.elfinderdialog = function(opts) {
 					$(this).data('modal') && overlay.is(':hidden') && overlay.elfinderoverlay('show');
 					overlay.zIndex($(this).zIndex());
 				})
+				.bind('posinit', function() {
+					var css = opts.position;
+					if (!css) {
+						css = {
+							top  : Math.max(0, parseInt((parent.height() - dialog.outerHeight())/2 - 42))+'px',
+							left : Math.max(0, parseInt((parent.width() - dialog.outerWidth())/2))+'px'
+						};
+					}
+					dialog.css(css);
+				})
 				.data({modal: opts.modal}),
 				maxZIndex = function() {
 					var z = parent.zIndex() + 10;
@@ -6438,14 +6468,7 @@ $.fn.elfinderdialog = function(opts) {
 				top
 			;
 		
-		if (!opts.position) {
-			opts.position = {
-				top  : Math.max(0, parseInt((parent.height() - dialog.outerHeight())/2 - 42))+'px',
-				left : Math.max(0, parseInt((parent.width() - dialog.outerWidth())/2))+'px'
-			};
-		} 
-			
-		dialog.css(opts.position);
+		dialog.trigger('posinit');
 
 		if (opts.closeOnEscape) {
 			$(document).bind('keyup.'+id, function(e) {
@@ -9564,7 +9587,8 @@ elFinder.prototype.commands.netmount = function() {
 						buttons        : {}
 					},
 					content = $('<table class="elfinder-info-tb elfinder-netmount-tb"/>'),
-					hidden  = $('<div/>');
+					hidden  = $('<div/>'),
+					dialog;
 
 				content.append($('<tr/>').append($('<td>'+fm.i18n('protocol')+'</td>')).append($('<td/>').append(inputs.protocol)));
 
@@ -9616,7 +9640,12 @@ elFinder.prototype.commands.netmount = function() {
 					self.dialog.elfinderdialog('close');
 				};
 				
-				return fm.dialog(content, opts).ready(function(){inputs.protocol.change();});
+				dialog = fm.dialog(content, opts);
+				dialog.ready(function(){
+					inputs.protocol.change();
+					dialog.elfinderdialog('posInit');
+				});
+				return dialog;
 			}
 			;
 		
