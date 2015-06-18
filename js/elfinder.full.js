@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1_n (Nightly: 01f7ef0) (2015-06-18)
+ * Version 2.1_n (Nightly: 8381ea0) (2015-06-18)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -3615,7 +3615,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1_n (Nightly: 01f7ef0)';
+elFinder.prototype.version = '2.1_n (Nightly: 8381ea0)';
 
 
 
@@ -12120,13 +12120,13 @@ elFinder.prototype.commands.rm = function() {
 		if (dfrd.state() == 'pending') {
 			files = this.hashes(hashes);
 			
+			fm.lockfiles({files : files});
 			fm.confirm({
 				title  : self.title,
 				text   : 'confirmRm',
 				accept : {
 					label    : 'btnRm',
 					callback : function() {  
-						fm.lockfiles({files : files});
 						fm.request({
 							data   : {cmd  : 'rm', targets : files}, 
 							notify : {type : 'rm', cnt : cnt},
@@ -12138,15 +12138,18 @@ elFinder.prototype.commands.rm = function() {
 						.done(function(data) {
 							dfrd.done(data);
 							goroot && fm.exec('open', goroot)
-						}
-						).always(function() {
+						})
+						.always(function() {
 							fm.unlockfiles({files : files});
 						});
 					}
 				},
 				cancel : {
 					label    : 'btnCancel',
-					callback : function() { dfrd.reject(); }
+					callback : function() {
+						fm.unlockfiles({files : files});
+						dfrd.reject();
+					}
 				}
 			});
 		}
