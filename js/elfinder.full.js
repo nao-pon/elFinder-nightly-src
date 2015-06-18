@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1 (Nightly: 1cbafb3) (2015-06-18)
+ * Version 2.1 (Nightly: 5579b72) (2015-06-18)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -576,21 +576,37 @@ window.elFinder = function(node, opts) {
 		cursorAt   : {left : 50, top : 47},
 		start      : function(e, ui) {
 			var targets = $.map(ui.helper.data('files')||[], function(h) { return h || null ;}),
+			locked = false,
 			cnt, h;
 			cnt = targets.length;
 			while (cnt--) {
 				h = targets[cnt];
 				if (files[h].locked) {
+					locked = true;
 					ui.helper.addClass('elfinder-drag-helper-plus').data('locked', true);
 					break;
 				}
 			}
+			!locked && self.trigger('lockfiles', {files : targets});
+
 		},
-		stop       : function() { self.trigger('focus').trigger('dragstop'); },
+		stop       : function(e, ui) {
+			self.trigger('focus').trigger('dragstop');
+			if (! ui.helper.data('droped')) {
+				self.trigger('unlockfiles', {files : $.map(ui.helper.data('files')||[], function(h) { return h || null ;})});
+			}
+		},
 		helper     : function(e, ui) {
 			var element = this.id ? $(this) : $(this).parents('[id]:first'),
 				helper  = $('<div class="elfinder-drag-helper"><span class="elfinder-drag-helper-icon-plus"/></div>'),
-				icon    = function(mime) { return '<div class="elfinder-cwd-icon '+self.mime2class(mime)+' ui-corner-all"/>'; },
+				icon    = function(f) {
+					var mime = f.mime, i;
+					i = '<div class="elfinder-cwd-icon '+self.mime2class(mime)+' ui-corner-all"/>';
+					if (f.tmb && f.tmb !== 1) {
+						i = $(i).css('background', "url('"+self.option('tmbUrl')+f.tmb+"') center center no-repeat").get(0).outerHTML;
+					}
+					return i;
+				},
 				hashes, l;
 			
 			self.trigger('dragstart', {target : element[0], originalEvent : e});
@@ -599,15 +615,17 @@ window.elFinder = function(node, opts) {
 				? self.selected() 
 				: [self.navId2Hash(element.attr('id'))];
 			
-			helper.append(icon(files[hashes[0]].mime)).data('files', hashes).data('locked', false);
+			helper.append(icon(files[hashes[0]])).data('files', hashes).data('locked', false).data('droped', false);
 
 			if ((l = hashes.length) > 1) {
-				helper.append(icon(files[hashes[l-1]].mime) + '<span class="elfinder-drag-num">'+l+'</span>');
+				helper.append(icon(files[hashes[l-1]]) + '<span class="elfinder-drag-num">'+l+'</span>');
 			}
 			
 			$(document).bind(keydown + ' keyup.' + namespace, function(e){
+				var ctr = (e.shiftKey||e.ctrlKey||e.metaKey);
 				if (helper.is(':visible') && ! helper.data('locked')) {
-					helper.toggleClass('elfinder-drag-helper-plus', e.shiftKey||e.ctrlKey||e.metaKey);
+					helper.toggleClass('elfinder-drag-helper-plus', ctr);
+					self.trigger(ctr? 'unlockfiles' : 'lockfiles', {files : hashes});
 				}
 			});
 			
@@ -632,6 +650,7 @@ window.elFinder = function(node, opts) {
 					c       = 'class',
 					cnt, hash, i, h;
 				
+				ui.helper.data('droped', true);
 				if (dst.is('.'+self.res(c, 'cwd'))) {
 					hash = cwd;
 				} else if (dst.is('.'+self.res(c, 'cwdfile'))) {
@@ -645,7 +664,11 @@ window.elFinder = function(node, opts) {
 				while (cnt--) {
 					h = targets[cnt];
 					// ignore drop into itself or in own location
-					h != hash && files[h].phash != hash && result.push(h);
+					if (h != hash && files[h].phash != hash) {
+						result.push(h);
+					} else {
+						self.trigger('unlockfiles', {files : [h]});
+					}
 				}
 				
 				if (result.length) {
@@ -653,7 +676,8 @@ window.elFinder = function(node, opts) {
 					self.clipboard(result, !(e.ctrlKey||e.shiftKey||e.metaKey||ui.helper.data('locked')));
 					self.exec('paste', hash);
 					self.trigger('drop', {files : targets});
-
+				} else {
+					self.trigger('unlockfiles', {files : targets});
 				}
 			}
 		};
@@ -3591,7 +3615,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1 (Nightly: 1cbafb3)';
+elFinder.prototype.version = '2.1 (Nightly: 5579b72)';
 
 
 
