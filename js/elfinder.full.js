@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1 (Nightly: 6ea12d0) (2015-06-20)
+ * Version 2.1 (Nightly: 6bedcbe) (2015-06-20)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -3658,7 +3658,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1 (Nightly: 6ea12d0)';
+elFinder.prototype.version = '2.1 (Nightly: 6bedcbe)';
 
 
 
@@ -9004,21 +9004,23 @@ elFinder.prototype.commands.chmod = function() {
 		// load thumbnail
 		if (tmb) {
 			$('<img/>')
-				.load(function() { dialog.find('.elfinder-cwd-icon').css('background', 'url("'+tmb+'") center center no-repeat'); })
+				.on('load', function() { dialog.find('.elfinder-cwd-icon').css('background', 'url("'+tmb+'") center center no-repeat'); })
 				.attr('src', tmb);
 		}
 
-		$('#' + id + '-table-perm :checkbox').click(function(){setperm('perm');});
-		$('#' + id + '-perm').keydown(function(e) {
+		$('#' + id + '-table-perm :checkbox').on('click', function(){setperm('perm');});
+		$('#' + id + '-perm').on('keydown', function(e) {
 			var c = e.keyCode;
 			e.stopPropagation();
 			if (c == 13) {
 				save();
 				return;
 			}
-		});
-		$('#' + id + '-perm').keyup(function(e) {
+		}).on('focus', function(e){
+			$(this).select();
+		}).on('keyup', function(e) {
 			if ($(this).val().length == 3) {
+				$(this).select();
 				setcheck($(this).val());
 			}
 		});
