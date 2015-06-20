@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1_n (Nightly: dcab9a8) (2015-06-20)
+ * Version 2.1_n (Nightly: 4fbc437) (2015-06-20)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -3650,7 +3650,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1_n (Nightly: dcab9a8)';
+elFinder.prototype.version = '2.1_n (Nightly: 4fbc437)';
 
 
 
@@ -4035,6 +4035,9 @@ elFinder.prototype._options = {
 			// file info columns displayed
 			listView : {
 				// name is always displayed, cols are ordered
+				// ex. ['perm', 'date', 'size', 'kind', 'owner', 'group', 'mode']
+				// mode: FileMode '0755', '755', or 'rwxr-xr-x' etc...
+				// 'owner', 'group' and 'mode', It's necessary set volume driver option "statOwner" to `true`
 				columns : ['perm', 'date', 'size', 'kind'],
 				// override this if you want custom columns name
 				// example
@@ -5263,6 +5266,7 @@ if (elFinder && elFinder.prototype && typeof(elFinder.prototype.i18) == 'object'
 			'other'           : 'Other', // from v2.1 added 20.6.2015
 			'execute'         : 'Execute', // from v2.1 added 20.6.2015
 			'perm'            : 'Permission', // from v2.1 added 20.6.2015
+			'mode'            : 'Mode', // from v2.1 added 20.6.2015
 
 			/********************************** mimetypes **********************************/
 			'kindUnknown'     : 'Unknown',
@@ -5800,6 +5804,9 @@ $.fn.elfindercwd = function(fm, options) {
 				},
 				kind : function(f) {
 					return fm.mime2kind(f);
+				},
+				mode : function(f) {
+					return f.perm? f.perm : '';
 				},
 				marker : function(f) {
 					return (f.alias || f.mime == 'symlink-broken' ? symlinkTpl : '')+(!f.read || !f.write ? permsTpl : '')+(f.locked ? lockTpl : '');
