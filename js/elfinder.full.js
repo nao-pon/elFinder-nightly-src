@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1_n (Nightly: dff8ab1) (2015-06-21)
+ * Version 2.1_n (Nightly: 00e00a8) (2015-06-22)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -3735,7 +3735,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1_n (Nightly: dff8ab1)';
+elFinder.prototype.version = '2.1_n (Nightly: 00e00a8)';
 
 
 
@@ -7628,18 +7628,18 @@ $.fn.elfinderplaces = function(fm, opts) {
 			}
 			
 
-			fm.remove(function(e) {
-				$.each(e.data.removed, function(i, hash) {
-					remove(hash);
-				});
-				save();
-			})
-			.change(function(e) {
+			fm.change(function(e) {
 				$.each(e.data.changed, function(i, file) {
 					if ($.inArray(file.hash, dirs) !== -1) {
 						remove(file.hash);
 						file.mime == 'directory' && add(file);
 					}
+				});
+				save();
+			})
+			.bind('rm', function(e){
+				$.each(e.data.removed, function(i, hash) {
+					remove(hash);
 				});
 				save();
 			})
@@ -7652,9 +7652,14 @@ $.fn.elfinderplaces = function(fm, opts) {
 						preventDefault : true
 					})
 					.done(function(data) {
+						var t;
 						$.each(data.files || [], function(i, file) {
 							if ($.inArray(file.hash, dirs) === -1) {
 								remove(file.hash);
+							}
+							if (!fm.files().hasOwnProperty(file.hash)) {
+								// update cache
+								fm.trigger('tree', {tree: [file]});
 							}
 						});
 						save();
