@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1 (Nightly: f234f03) (2015-06-22)
+ * Version 2.1 (Nightly: 4f9fbe1) (2015-06-22)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -3737,7 +3737,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1 (Nightly: f234f03)';
+elFinder.prototype.version = '2.1 (Nightly: 4f9fbe1)';
 
 
 
@@ -8302,7 +8302,8 @@ $.fn.elfindertree = function(fm, opts) {
 			updateTree = function(dirs) {
 				var length  = dirs.length,
 					orphans = [],
-					i = dirs.length, 
+					i = dirs.length,
+					cwdRoot = fm.cwd().root || '',
 					dir, html, parent, sibling;
 
 				var firstVol = true; // check for netmount volume
@@ -8313,7 +8314,7 @@ $.fn.elfindertree = function(fm, opts) {
 						continue;
 					}
 					
-					if ((parent = findSubtree(dir.phash)).length) {
+					if (cwdRoot != dir.phash && (parent = findSubtree(dir.phash)).length) {
 						html = itemhtml(dir);
 						if (dir.phash && (sibling = findSibling(parent, dir)).length) {
 							sibling.before(html);
