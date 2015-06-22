@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1 (Nightly: 4f9fbe1) (2015-06-22)
+ * Version 2.1 (Nightly: d499cb9) (2015-06-22)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -3628,17 +3628,22 @@ elFinder.prototype = {
 	 * Return formated file mode by options.fileModeStyle
 	 * 
 	 * @param  String  file mode
+	 * @param  String  format style
 	 * @return String
 	 */
-	formatFileMode : function(p) {
-		var ret, i, o, s, b, sticy, suid, sgid;
+	formatFileMode : function(p, style) {
+		var i, o, s, b, sticy, suid, sgid, str, oct;
+		
+		if (!style) {
+			style = this.options.fileModeStyle.toLowerCase();
+		}
 		p = $.trim(p);
 		if (p.match(/[rwxs-]{9}$/i)) {
-			p = p.substr(-9);
-			if (this.options.fileModeStyle == 'string') {
-				return p;
+			str = p = p.substr(-9);
+			if (style == 'string') {
+				return str;;
 			}
-			ret = '';
+			oct = '';
 			s = 0;
 			for (i=0; i<7; i=i+3) {
 				o = p.substr(i, 3);
@@ -3661,15 +3666,16 @@ elFinder.prototype = {
 						}
 					}
 				}
-				ret += b.toString(8);
+				oct += b.toString(8);
 			}
 			if (s) {
-				ret = s.toString(8) + ret;
+				oct = s.toString(8) + oct;
 			}
 		} else {
 			p = parseInt(p, 8);
-			if (!p || this.options.fileModeStyle != 'string') {
-				return p? p.toString(8) : '';
+			oct = p? p.toString(8) : '';
+			if (!p || style == 'octal') {
+				return oct;
 			}
 			o = p.toString(8);
 			s = 0;
@@ -3681,26 +3687,32 @@ elFinder.prototype = {
 			sticy = ((s & 1) == 1); // not support
 			sgid = ((s & 2) == 2);
 			suid = ((s & 4) == 4);
-			ret = '';
+			str = '';
 			for(i=0; i<3; i++) {
 				if ((parseInt(o.substr(i, 1), 8) & 4) == 4) {
-					ret += 'r';
+					str += 'r';
 				} else {
-					ret += '-';
+					str += '-';
 				}
 				if ((parseInt(o.substr(i, 1), 8) & 2) == 2) {
-					ret += 'w';
+					str += 'w';
 				} else {
-					ret += '-';
+					str += '-';
 				}
 				if ((parseInt(o.substr(i, 1), 8) & 1) == 1) {
-					ret += ((i==0 && suid)||(i==1 && sgid))? 's' : 'x';
+					str += ((i==0 && suid)||(i==1 && sgid))? 's' : 'x';
 				} else {
-					ret += '-';
+					str += '-';
 				}
 			}
 		}
-		return ret;
+		if (style == 'both') {
+			return str + ' (' + oct + ')';
+		} else if (style == 'string') {
+			return str;
+		} else {
+			return oct;
+		}
 	},
 	
 	navHash2Id : function(hash) {
@@ -3737,7 +3749,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1 (Nightly: 4f9fbe1)';
+elFinder.prototype.version = '2.1 (Nightly: d499cb9)';
 
 
 
@@ -3922,6 +3934,7 @@ elFinder.prototype._options = {
 	 * @type Array
 	 */
 	commands : [
+		'pixlr',
 		'open', 'reload', 'home', 'up', 'back', 'forward', 'getfile', 'quicklook', 
 		'download', 'rm', 'duplicate', 'rename', 'mkdir', 'mkfile', 'upload', 'copy', 
 		'cut', 'paste', 'edit', 'extract', 'archive', 'search', 'info', 'view', 'help',
@@ -4096,7 +4109,7 @@ elFinder.prototype._options = {
 			['quicklook'],
 			['copy', 'cut', 'paste'],
 			['rm'],
-			['duplicate', 'rename', 'edit', 'resize'],
+			['duplicate', 'rename', 'edit', 'resize', 'pixlr'],
 			['extract', 'archive'],
 			['search'],
 			['view', 'sort'],
@@ -4122,7 +4135,7 @@ elFinder.prototype._options = {
 			listView : {
 				// name is always displayed, cols are ordered
 				// ex. ['perm', 'date', 'size', 'kind', 'owner', 'group', 'mode']
-				// mode: FileMode '0755', '755', or 'rwxr-xr-x' etc...
+				// mode: 'mode'(by `fileModeStyle` setting), 'modestr'(rwxr-xr-x) , 'modeoct'(755), 'modeboth'(rwxr-xr-x (755))
 				// 'owner', 'group' and 'mode', It's necessary set volume driver option "statOwner" to `true`
 				columns : ['perm', 'date', 'size', 'kind'],
 				// override this if you want custom columns name
@@ -4220,6 +4233,15 @@ elFinder.prototype._options = {
 	 * @example "$1 H:m:i"
 	 */
 	fancyDateFormat : '',
+	
+	/**
+	 * Style of file mode at cwd-list, info dialog
+	 * 'string' (ex. rwxr-xr-x) or 'octal' (ex. 755) or 'both' (ex. rwxr-xr-x (755))
+	 * 
+	 * @type {String}
+	 * @default 'both'
+	 */
+	fileModeStyle : 'both',
 	
 	/**
 	 * elFinder width
@@ -4364,19 +4386,10 @@ elFinder.prototype._options = {
 		// current directory menu
 		cwd    : ['reload', 'back', '|', 'upload', 'mkdir', 'mkfile', 'paste', '|', 'sort', '|', 'info'],
 		// current directory file menu
-		files  : ['getfile', '|','open', 'quicklook', '|', 'download', '|', 'copy', 'cut', 'paste', 'duplicate', '|', 'rm', '|', 'edit', 'rename', 'resize', '|', 'archive', 'extract', '|', 'places', 'info', 'chmod'],
+		files  : ['getfile', '|','open', 'quicklook', '|', 'download', '|', 'copy', 'cut', 'paste', 'duplicate', '|', 'rm', '|', 'edit', 'rename', 'resize', 'pixlr', '|', 'archive', 'extract', '|', 'places', 'info', 'chmod'],
 		// system use only
 		cmdMaps: {}
 	},
-
-	/**
-	 * Style of file mode at cwd-list, info dialog
-	 * 'string' (ex. rwxr-xr-x) or 'octal' (ex. 755)
-	 * 
-	 * @type {String}
-	 * @default 'string'
-	 */
-	fileModeStyle : 'string',
 
 	/**
 	 * Debug config
@@ -5902,6 +5915,15 @@ $.fn.elfindercwd = function(fm, options) {
 				mode : function(f) {
 					return f.perm? fm.formatFileMode(f.perm) : '';
 				},
+				modestr : function(f) {
+					return f.perm? fm.formatFileMode(f.perm, 'string') : '';
+				},
+				modeoct : function(f) {
+					return f.perm? fm.formatFileMode(f.perm, 'octal') : '';
+				},
+				modeboth : function(f) {
+					return f.perm? fm.formatFileMode(f.perm, 'both') : '';
+				},
 				marker : function(f) {
 					return (f.alias || f.mime == 'symlink-broken' ? symlinkTpl : '')+(!f.read || !f.write ? permsTpl : '')+(f.locked ? lockTpl : '');
 				},
@@ -6360,7 +6382,10 @@ $.fn.elfindercwd = function(fm, options) {
 				perm : fm.i18n('perms'),
 				date : fm.i18n('modify'),
 				size : fm.i18n('size'),
-				kind : fm.i18n('kind')
+				kind : fm.i18n('kind'),
+				modestr : fm.i18n('mode'),
+				modeoct : fm.i18n('mode'),
+				modeboth : fm.i18n('mode'),
 			},
 			
 			customColsNameBuild = function() {
