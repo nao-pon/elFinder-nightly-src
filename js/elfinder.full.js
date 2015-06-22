@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1_n (Nightly: 42a78b2) (2015-06-22)
+ * Version 2.1_n (Nightly: 850b28e) (2015-06-22)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -1268,20 +1268,11 @@ window.elFinder = function(node, opts) {
 	 */
 	this.sync = function() {
 		var self  = this,
-			dfrd  = $.Deferred().done(function() { self.trigger('sync'); }),
-			opts1 = {
-				data           : {cmd : 'open', init : 1, target : cwd, tree : this.ui.tree ? 1 : 0},
-				preventDefault : true
-			},
-			opts2 = {
-				data           : {cmd : 'tree', target : (cwd == this.root())? cwd : this.file(cwd).phash},
-				preventDefault : true
-			};
-		
-		$.when(
-			this.request(opts1),
-			this.request(opts2)
-		)
+			dfrd  = $.Deferred().done(function() { self.trigger('sync'); });
+		this.request({
+			data           : {cmd : 'open', init : 1, target : cwd, tree : this.ui.tree ? 1 : 0},
+			preventDefault : true
+		})
 		.fail(function(error) {
 			dfrd.reject(error);
 			error && self.request({
@@ -3746,7 +3737,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1_n (Nightly: 42a78b2)';
+elFinder.prototype.version = '2.1_n (Nightly: 850b28e)';
 
 
 
