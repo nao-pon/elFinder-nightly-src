@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1_n (Nightly: b78fce1) (2015-06-22)
+ * Version 2.1_n (Nightly: 344e490) (2015-06-22)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -604,6 +604,13 @@ window.elFinder = function(node, opts) {
 	this.notifyDelay = this.options.notifyDelay > 0 ? parseInt(this.options.notifyDelay) : 500;
 	
 	/**
+	 * Dragging UI Helper object
+	 *
+	 * @type jQuery | null
+	 **/
+	this.draggingUiHelper = null,
+	
+	/**
 	 * Base draggable options
 	 *
 	 * @type Object
@@ -621,6 +628,7 @@ window.elFinder = function(node, opts) {
 			var targets = $.map(ui.helper.data('files')||[], function(h) { return h || null ;}),
 			locked = false,
 			cnt, h;
+			self.draggingUiHelper = ui.helper;
 			cnt = targets.length;
 			while (cnt--) {
 				h = targets[cnt];
@@ -634,6 +642,7 @@ window.elFinder = function(node, opts) {
 
 		},
 		stop       : function(e, ui) {
+			self.draggingUiHelper = null;
 			self.trigger('focus').trigger('dragstop');
 			if (! ui.helper.data('droped')) {
 				self.trigger('unlockfiles', {files : $.map(ui.helper.data('files')||[], function(h) { return h || null ;})});
@@ -651,6 +660,8 @@ window.elFinder = function(node, opts) {
 					return i;
 				},
 				hashes, l;
+			
+			self.draggingUiHelper && self.draggingUiHelper.stop(true, true);
 			
 			self.trigger('dragstart', {target : element[0], originalEvent : e});
 			
@@ -717,10 +728,10 @@ window.elFinder = function(node, opts) {
 				if (result.length) {
 					ui.helper.hide();
 					self.clipboard(result, !(e.ctrlKey||e.shiftKey||e.metaKey||ui.helper.data('locked')));
-					self.exec('paste', hash);
+					self.exec('paste', hash).always(function(){
+						self.trigger('unlockfiles', {files : targets});
+					});
 					self.trigger('drop', {files : targets});
-				} else {
-					self.trigger('unlockfiles', {files : targets});
 				}
 			}
 		};
@@ -3735,7 +3746,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1_n (Nightly: b78fce1)';
+elFinder.prototype.version = '2.1_n (Nightly: 344e490)';
 
 
 
@@ -7450,16 +7461,22 @@ $.fn.elfinderplaces = function(fm, opts) {
 			 * Remove dir from places
 			 *
 			 * @param  String  directory id
-			 * @return void
+			 * @return String  removed name
 			 **/
 			remove = function(hash) {
-				var ndx = $.inArray(hash, dirs);
+				var ndx = $.inArray(hash, dirs), name, tgt;
 
 				if (ndx !== -1) {
 					dirs.splice(ndx, 1);
-					subtree.find('#'+hash2id(hash)).parent().remove();
-					!subtree.children().length && root.removeClass(collapsed+' '+expanded);
+					tgt = subtree.find('#'+hash2id(hash));
+					if (tgt.length) {
+						name = tgt.text();
+						tgt.parent().remove();
+						!subtree.children().length && root.removeClass(collapsed+' '+expanded);
+					}
 				}
+				
+				return name;
 			},
 			/**
 			 * Remove all dir from places
@@ -7637,10 +7654,20 @@ $.fn.elfinderplaces = function(fm, opts) {
 				});
 				save();
 			})
-			.bind('rm', function(e){
-				$.each(e.data.removed, function(i, hash) {
-					remove(hash);
-				});
+			.bind('rm paste', function(e){
+				var names = [];
+				if (e.data.removed) {
+					$.each(e.data.removed, function(i, hash) {
+						names.push(remove(hash));
+					});
+				}
+				if (e.data.added) {
+					$.each(e.data.added, function(i, file) {
+						if ($.inArray(file.name, names) !== 1) {
+							file.mime == 'directory' && add(file);
+						}
+					});
+				}
 				save();
 			})
 			.bind('sync', function() {
@@ -7673,6 +7700,7 @@ $.fn.elfinderplaces = function(fm, opts) {
 		
 	});
 }
+
 
 /*
  * File: /js/ui/searchbutton.js
@@ -7811,12 +7839,14 @@ $.fn.elfindersearchbutton = function(cmd) {
 				var dirs    = [],
 					volroot = fm.file(fm.root(fm.cwd().hash));
 				
-				$.each(fm.parents(fm.cwd().hash), function(i, hash) {
-					dirs.push(fm.file(hash).name);
-				});
-	
-				$('#'+id('SearchFromCwd')).next('label').attr('title', fm.i18n('searchTarget', dirs.join(fm.option('separator'))));
-				$('#'+id('SearchFromVol')).next('label').attr('title', fm.i18n('searchTarget', volroot.name));
+				if (volroot) {
+					$.each(fm.parents(fm.cwd().hash), function(i, hash) {
+						dirs.push(fm.file(hash).name);
+					});
+		
+					$('#'+id('SearchFromCwd')).next('label').attr('title', fm.i18n('searchTarget', dirs.join(fm.option('separator'))));
+					$('#'+id('SearchFromVol')).next('label').attr('title', fm.i18n('searchTarget', volroot.name));
+				}
 			})
 			.shortcut({
 				pattern     : 'ctrl+f f3',
