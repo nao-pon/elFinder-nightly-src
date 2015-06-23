@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1_n (Nightly: 4863d7e) (2015-06-23)
+ * Version 2.1_n (Nightly: 4c8f504) (2015-06-23)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -1268,11 +1268,19 @@ window.elFinder = function(node, opts) {
 	 */
 	this.sync = function() {
 		var self  = this,
-			dfrd  = $.Deferred().done(function() { self.trigger('sync'); });
-		this.request({
-			data           : {cmd : 'open', init : 1, target : cwd, tree : this.ui.tree ? 1 : 0},
-			preventDefault : true
-		})
+			dfrd  = $.Deferred().done(function() { self.trigger('sync'); }),
+			opts1 = {
+				data           : {cmd : 'open', reload : 1, target : cwd, tree : this.ui.tree ? 1 : 0},
+				preventDefault : true
+			},
+			opts2 = {
+				data           : {cmd : 'parents', target : cwd},
+				preventDefault : true
+			};
+		$.when(
+			this.request(opts1),
+			this.request(opts2)
+		)
 		.fail(function(error) {
 			dfrd.reject(error);
 			error && self.request({
@@ -3749,7 +3757,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1_n (Nightly: 4863d7e)';
+elFinder.prototype.version = '2.1_n (Nightly: 4c8f504)';
 
 
 
@@ -8330,7 +8338,6 @@ $.fn.elfindertree = function(fm, opts) {
 				var length  = dirs.length,
 					orphans = [],
 					i = dirs.length,
-					cwdRoot = fm.cwd().root || '',
 					dir, html, parent, sibling;
 
 				var firstVol = true; // check for netmount volume
@@ -8341,7 +8348,7 @@ $.fn.elfindertree = function(fm, opts) {
 						continue;
 					}
 					
-					if (cwdRoot != dir.phash && (parent = findSubtree(dir.phash)).length) {
+					if ((parent = findSubtree(dir.phash)).length) {
 						html = itemhtml(dir);
 						if (dir.phash && (sibling = findSibling(parent, dir)).length) {
 							sibling.before(html);
