@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1 (Nightly: ca9446b) (2015-06-24)
+ * Version 2.1 (Nightly: 53aeb81) (2015-06-24)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -642,10 +642,13 @@ window.elFinder = function(node, opts) {
 
 		},
 		stop       : function(e, ui) {
+			var files;
 			self.draggingUiHelper = null;
 			self.trigger('focus').trigger('dragstop');
 			if (! ui.helper.data('droped')) {
-				self.trigger('unlockfiles', {files : $.map(ui.helper.data('files')||[], function(h) { return h || null ;})});
+				files = $.map(ui.helper.data('files')||[], function(h) { return h || null ;});
+				self.trigger('unlockfiles', {files : files});
+				self.trigger('selectfiles', {files : files});
 			}
 		},
 		helper     : function(e, ui) {
@@ -3757,7 +3760,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1 (Nightly: ca9446b)';
+elFinder.prototype.version = '2.1 (Nightly: 53aeb81)';
 
 
 
@@ -6859,10 +6862,15 @@ $.fn.elfindercwd = function(fm, options) {
 				cwd.selectable('enable').droppable('enable');
 				selectLock = false;
 			})
-			.bind('lockfiles unlockfiles', function(e) {
-				var event = e.type == 'lockfiles' ? evtDisable : evtEnable,
-					files = e.data.files || [], 
-					l     = files.length;
+			.bind('lockfiles unlockfiles selectfiles unselectfiles', function(e) {
+				var events = {
+						lockfiles     : evtDisable ,
+						unlockfiles   : evtEnable ,
+						selectfiles   : evtSelect,
+						unselectfiles : evtUnselect },
+					event  = events[e.type],
+					files  = e.data.files || [],
+					l      = files.length;
 				
 				while (l--) {
 					cwd.find('#'+files[l]).trigger(event);
