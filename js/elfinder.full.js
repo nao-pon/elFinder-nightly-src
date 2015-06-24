@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.x (Nightly: 42eee17) (2015-06-23)
+ * Version 2.x (Nightly: 320b0eb) (2015-06-24)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -3044,7 +3044,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.x (Nightly: 42eee17)';
+elFinder.prototype.version = '2.x (Nightly: 320b0eb)';
 
 
 
@@ -9194,7 +9194,7 @@ elFinder.prototype.commands.paste = function() {
 
 						fm.confirm({
 							title  : fm.i18n(cut ? 'moveFiles' : 'copyFiles'),
-							text   : fm.i18n(['errExists', file.name, 'confirmRepl']), 
+							text   : ['errExists', file.name, 'confirmRepl'], 
 							all    : !last,
 							accept : {
 								label    : 'btnYes',
