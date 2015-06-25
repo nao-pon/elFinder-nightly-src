@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1_n (Nightly: 285015b) (2015-06-24)
+ * Version 2.1_n (Nightly: 626a787) (2015-06-25)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -1942,6 +1942,26 @@ window.elFinder = function(node, opts) {
 
 	});
 
+	if (self.dragUpload) {
+		node[0].addEventListener('dragenter', function(e) {
+			e.preventDefault();
+			e.stopPropagation();
+		}, false);
+		node[0].addEventListener('dragleave', function(e) {
+			e.preventDefault();
+			e.stopPropagation();
+		}, false);
+		node[0].addEventListener('dragover', function(e) {
+			e.preventDefault();
+			e.stopPropagation();
+		}, false);
+		node[0].addEventListener('drop', function(e) {
+			e.preventDefault();
+			e.stopPropagation();
+			self.error(['errUploadFile', self.i18n('items'), 'errPerm']);
+		}, false);
+	}
+	
 	// self.timeEnd('load'); 
 
 }
@@ -2396,7 +2416,7 @@ elFinder.prototype = {
 				return dfrd.reject();
 			}
 			
-			form.append('<input type="hidden" name="'+(self.newAPI ? 'target' : 'current')+'" value="'+self.cwd().hash+'"/>')
+			form.append('<input type="hidden" name="'+(self.newAPI ? 'target' : 'current')+'" value="'+(data.target || self.cwd().hash)+'"/>')
 				.append('<input type="hidden" name="html" value="1"/>')
 				.append($(input).attr('name', 'upload[]'));
 			
@@ -3734,6 +3754,64 @@ elFinder.prototype = {
 		return typeof(id) == 'string' ? id.substr(4) : false;
 	},
 	
+	/**
+	 * Make event listener for direct upload to directory
+	 * 
+	 * @param  Object  DOM object
+	 * @param  String  Target dirctory hash
+	 * @return void
+	 */
+	makeDirectDropUpload : function(elm, hash) {
+		var self = this, ent,
+		c         = 'class',
+		$elm      = $(elm),
+		collapsed = self.res(c, 'navcollapse'),
+		expanded  = self.res(c, 'navexpand'),
+		dropover  = self.res(c, 'adroppable'),
+		arrow     = self.res(c, 'navarrow'),
+		clDropActive = self.res(c, 'adroppable');
+
+		if (self.dragUpload) {
+			elm.addEventListener('dragenter', function(e) {
+				e.preventDefault();
+				e.stopPropagation();
+				ent = true;
+				$elm.addClass(clDropActive);
+				if ($elm.is('.'+collapsed+':not(.'+expanded+')')) {
+					setTimeout(function() {
+						$elm.is('.'+dropover) && $elm.children('.'+arrow).click();
+					}, 500);
+				}
+			}, false);
+
+			elm.addEventListener('dragleave', function(e) {
+				e.preventDefault();
+				e.stopPropagation();
+				if (ent) {
+					ent = false;
+				} else {
+					$elm.removeClass(clDropActive);
+				}
+			}, false);
+
+			elm.addEventListener('dragover', function(e) {
+				e.preventDefault();
+				e.stopPropagation();
+				ent = false;
+			}, false);
+
+			elm.addEventListener('drop', function(e) {
+				e.preventDefault();
+				e.stopPropagation();
+				$elm.removeClass(clDropActive);
+				e._target = hash;
+				self.directUploadTarget = hash;
+				self.exec('upload', {dropEvt: e});
+				self.directUploadTarget = null;
+			}, false);
+		}
+	},
+	
 	log : function(m) { window.console && window.console.log && window.console.log(m); return this; },
 	
 	debug : function(type, m) {
@@ -3760,7 +3838,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1_n (Nightly: 285015b)';
+elFinder.prototype.version = '2.1_n (Nightly: 626a787)';
 
 
 
@@ -6191,7 +6269,7 @@ $.fn.elfindercwd = function(fm, options) {
 				ltmb.length && loadThumbnails(ltmb);
 
 				// make directory droppable
-				dirs && makeDroppable();
+				dirs && !mobile && makeDroppable();
 				
 				if (selectedFiles.length) {
 					place.find('[id]:not(.'+clSelected+'):not(.elfinder-cwd-parent)').each(function() {
@@ -6228,7 +6306,9 @@ $.fn.elfindercwd = function(fm, options) {
 			 */
 			makeDroppable = function() {
 				setTimeout(function() {
-					cwd.find('.directory:not(.'+clDroppable+',.elfinder-na,.elfinder-ro)').droppable(fm.droppable);
+					cwd.find('.directory:not(.'+clDroppable+',.elfinder-na,.elfinder-ro)').droppable(fm.droppable).each(function(){
+						fm.makeDirectDropUpload(this, this.id);
+					});
 				}, 20);
 			},
 			
@@ -6364,7 +6444,7 @@ $.fn.elfindercwd = function(fm, options) {
 				
 				attachThumbnails(atmb);
 				ltmb.length && loadThumbnails(ltmb);
-				dirs && makeDroppable();
+				dirs && !mobile && makeDroppable();
 			},
 			
 			/**
@@ -6741,30 +6821,39 @@ $.fn.elfindercwd = function(fm, options) {
 		// for iOS5 bug
 		$('body').on('touchstart touchmove touchend', function(e){});
 		
+		(function(){
+		var ent;
 		if (fm.dragUpload) {
 			wrapper[0].addEventListener('dragenter', function(e) {
+				var cwd = fm.cwd();
 				e.preventDefault();
 				e.stopPropagation();
-				
-				wrapper.addClass(clDropActive);
+				ent = true;
+				cwd && cwd.write && wrapper.addClass(clDropActive);
 			}, false);
 
 			wrapper[0].addEventListener('dragleave', function(e) {
 				e.preventDefault();
 				e.stopPropagation();
-				e.target == cwd[0] && wrapper.removeClass(clDropActive);
+				if (ent) {
+					ent = false;
+				} else {
+					wrapper.removeClass(clDropActive);
+				}
 			}, false);
 
 			wrapper[0].addEventListener('dragover', function(e) {
 				e.preventDefault();
 				e.stopPropagation();
+				ent = false;
 			}, false);
 
 			wrapper[0].addEventListener('drop', function(e) {
 				wrapper.removeClass(clDropActive);
 				fm.exec('upload', {dropEvt: e});
 			}, false);
-		}
+		};
+		})();
 
 		fm
 			.bind('open', function(e) {
@@ -8377,9 +8466,11 @@ $.fn.elfindertree = function(fm, opts) {
 					return updateTree(orphans);
 				} 
 				
-				setTimeout(function() {
-					updateDroppable();
-				}, 10);
+				if (!mobile) {
+					setTimeout(function() {
+						updateDroppable();
+					}, 10);
+				}
 				
 			},
 			
@@ -8485,7 +8576,9 @@ $.fn.elfindertree = function(fm, opts) {
 			 * @return void
 			 */
 			updateDroppable = function() {
-				tree.find('.'+navdir+':not(.'+droppable+',.elfinder-ro,.elfinder-na)').droppable(droppableopts);
+				tree.find('.'+navdir+':not(.'+droppable+',.elfinder-ro,.elfinder-na)').droppable(droppableopts).each(function(){
+					fm.makeDirectDropUpload(this, fm.navId2Hash(this.id));
+				});
 			},
 			
 			/**
@@ -8682,7 +8775,7 @@ $.fn.elfindertree = function(fm, opts) {
 			}
 
 			sync();
-			updateDroppable();
+			!mobile && updateDroppable();
 		})
 		// remove dirs
 		.remove(function(e) {
@@ -13317,15 +13410,24 @@ elFinder.prototype.commands.upload = function() {
 	 *
 	 * @return Number
 	 **/
-	this.getstate = function() {
-		return !this._disabled && this.fm.cwd().write ? 0 : -1;
+	this.getstate = function(sel) {
+		var fm = this.fm, f,
+		sel = fm.directUploadTarget? [fm.directUploadTarget] : (sel || [fm.cwd().hash]);
+		if (!this._disabled && sel.length == 1) {
+			f = fm.file(sel[0]);
+		}
+		return (f && f.mime == 'directory' && f.write)? 0 : -1;
 	};
 	
 	
 	this.exec = function(data) {
 		var fm = this.fm,
+			targets = data && (data instanceof Array)? data : null,
 			upload = function(data) {
 				dialog.elfinderdialog('close');
+				if (targets) {
+					data.target = targets[0];
+				}
 				fm.upload(data)
 					.fail(function(error) {
 						dfrd.reject(error);
@@ -13336,7 +13438,7 @@ elFinder.prototype.commands.upload = function() {
 			},
 			dfrd, dialog, input, button, dropbox, pastebox, dropUpload, paste;
 		
-		if (this.disabled()) {
+		if (this.getstate(targets) < 0) {
 			return $.Deferred().reject();
 		}
 		
@@ -13362,10 +13464,11 @@ elFinder.prototype.commands.upload = function() {
 				file = [ data ];
 				type = 'text';
 			}
-			return file? fm.upload({files : file, type : type}) : false;
+			target = e._target || null;
+			return file? fm.upload({files : file, type : type, target : target}) : false;
 		};
 		
-		if (data) {
+		if (!targets && data) {
 			if (data.input || data.files) {
 				data.type = 'files';
 				return fm.upload(data);
@@ -13482,6 +13585,7 @@ elFinder.prototype.commands.upload = function() {
 
 			dropbox.addEventListener('drop', function(e) {
 				dialog.elfinderdialog('close');
+				targets && (e._target = targets[0]);
 				dropUpload(e);
 			}, false);
 			
@@ -13493,7 +13597,7 @@ elFinder.prototype.commands.upload = function() {
 		}
 		
 		fm.dialog(dialog, {
-			title          : this.title,
+			title          : this.title + (targets? ' - ' + fm.file(targets[0]).name : ''),
 			modal          : true,
 			resizable      : false,
 			destroyOnClose : true
