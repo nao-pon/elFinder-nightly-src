@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1_n (Nightly: 3fa1359) (2015-06-25)
+ * Version 2.1_n (Nightly: 39297ed) (2015-06-26)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -2609,7 +2609,7 @@ elFinder.prototype = {
 			var send = function(files, paths){
 				var size = 0, fcnt = 1, sfiles = [], c = 0, total = cnt, maxFileSize, totalSize = 0, chunked = [];
 				var chunkID = +new Date();
-				var BYTES_PER_CHUNK = fm.uplMaxSize - 8190; // margin 8kb
+				var BYTES_PER_CHUNK = Math.min((fm.uplMaxSize || 2097152) - 8190, 5242880); // margin 8kb and Max 5MB
 				if (! dataChecked && (isDataType || data.type == 'files')) {
 					maxFileSize = fm.option('uploadMaxSize')? fm.option('uploadMaxSize') : 0;
 					for (var i=0; i < files.length; i++) {
@@ -2619,7 +2619,7 @@ elFinder.prototype = {
 							total--;
 							continue;
 						}
-						if (fm.uplMaxSize && files[i].size >= fm.uplMaxSize) {
+						if (files[i].size >= BYTES_PER_CHUNK) {
 							var SIZE = files[i].size;
 
 							var start = 0;
@@ -2829,7 +2829,7 @@ elFinder.prototype = {
 					if (xhr.readyState == 4 && xhr.status == 0) {
 						// ff bug while send zero sized file
 						// for safari - send directory
-						dfrd.reject(['errConnect', 'errAbort']);
+						dfrd.reject(['errAbort', 'errFolderUpload']);
 					}
 				};
 				
@@ -3838,7 +3838,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1_n (Nightly: 3fa1359)';
+elFinder.prototype.version = '2.1_n (Nightly: 39297ed)';
 
 
 
@@ -5242,6 +5242,7 @@ if (elFinder && elFinder.prototype && typeof(elFinder.prototype.i18) == 'object'
 			'errExtractExec'       : 'Error while extracting files: "$1"',
 			'errNetUnMount'        : 'Unable to unmount', // added 30.04.2012
 			'errConvUTF8'          : 'Not convertible to UTF-8', // added 08.04.2014
+			'errFolderUpload'      : 'Try Google Chrome, If you\'d like to upload the folder.', // from v2.1 added 26.6.2015
 
 			/******************************* commands names ********************************/
 			'cmdarchive'   : 'Create archive',
