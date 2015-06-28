@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1_n (Nightly: c3a2a5f) (2015-06-28)
+ * Version 2.1_n (Nightly: d81e922) (2015-06-28)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -888,6 +888,7 @@ div.elfinder-cwd-wrapper-list tr.ui-state-default td span.ui-icon {
 .elfinder-dialog-icon-loadimg,
 .elfinder-dialog-icon-netmount,
 .elfinder-dialog-icon-netunmount,
+.elfinder-dialog-icon-chmod,
 .elfinder-dialog-icon-dim         { background-position: 0 -434px; }
 
 /*********************** CONFIRM DIALOG **************************/
