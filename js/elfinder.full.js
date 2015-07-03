@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1_n (Nightly: 4901001) (2015-07-03)
+ * Version 2.1_n (Nightly: ab6eb24) (2015-07-03)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -1358,23 +1358,24 @@ window.elFinder = function(node, opts) {
 	 */
 	this.trigger = function(event, data) {
 		var event    = event.toLowerCase(),
-			handlers = listeners[event] || [], i, l, frozen;
+			isopen   = (event === 'open'),
+			handlers = listeners[event] || [], i, l, jst;
 		
-		this.debug('event-'+event, data)
+		this.debug('event-'+event, data);
 		
+		if (isopen) {
+			// for performance tuning
+			jst = JSON.stringify(data);
+		}
 		if (handlers.length) {
 			event = $.Event(event);
 
-			// freeze `data` object for better performance, deep copy is too heavy
-			if (Object.freeze) {
-				frozen = $.extend(true, {}, data);
-				event.data = Object.freeze(frozen);
-			}
 			l = handlers.length;
 			for (i = 0; i < l; i++) {
-				if (!frozen) {
+				// only callback has argument
+				if (handlers[i].length) {
 					// to avoid data modifications. remember about "sharing" passing arguments in js :) 
-					event.data = $.extend(true, {}, data);
+					event.data = isopen? JSON.parse(jst) : $.extend(true, {}, data);
 				}
 
 				try {
@@ -3941,7 +3942,7 @@ if (!Object.keys) {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1_n (Nightly: 4901001)';
+elFinder.prototype.version = '2.1_n (Nightly: ab6eb24)';
 
 
 
@@ -4687,7 +4688,7 @@ elFinder.prototype.history = function(fm) {
 	}
 	
 	// bind to elfinder events
-	fm.open(function(e) {
+	fm.open(function() {
 		var l = history.length,
 			cwd = fm.cwd().hash;
 
