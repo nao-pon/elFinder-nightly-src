@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1 (Nightly: 4cc9224) (2015-07-01)
+ * Version 2.1 (Nightly: 88e0324) (2015-07-03)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -262,14 +262,13 @@ window.elFinder = function(node, opts) {
 				files = {};
 			} else {
 				// remove only files from prev cwd
-				for (var i in files) {
-					if (files.hasOwnProperty(i) 
-					&& files[i].mime != 'directory' 
-					&& files[i].phash == cwd
+				$.each(Object.keys(files), function(n, i) {
+					if (files[i].mime !== 'directory' 
+					&& files[i].phash === cwd
 					&& $.inArray(i, remember) === -1) {
 						delete files[i];
 					}
-				}
+				});
 			}
 
 			cwd = data.cwd.hash;
@@ -287,10 +286,10 @@ window.elFinder = function(node, opts) {
 		 * @return void
 		 **/
 		cache = function(data) {
-			var l = data.length, f;
+			var l = data.length, f, i;
 
-			while (l--) {
-				f = data[l];
+			for (i = 0; i < l; i++) {
+				f = data[i];
 				if (f.name && f.hash && f.mime) {
 					if (!f.phash) {
 						var name = 'volume_'+f.name,
@@ -1359,16 +1358,24 @@ window.elFinder = function(node, opts) {
 	 */
 	this.trigger = function(event, data) {
 		var event    = event.toLowerCase(),
-			handlers = listeners[event] || [], i, j;
+			handlers = listeners[event] || [], i, l, frozen;
 		
 		this.debug('event-'+event, data)
 		
 		if (handlers.length) {
 			event = $.Event(event);
 
-			for (i = 0; i < handlers.length; i++) {
-				// to avoid data modifications. remember about "sharing" passing arguments in js :) 
-				event.data = $.extend(true, {}, data);
+			// freeze `data` object for better performance, deep copy is too heavy
+			if (Object.freeze) {
+				frozen = $.extend(true, {}, data);
+				event.data = Object.freeze(frozen);
+			}
+			l = handlers.length;
+			for (i = 0; i < l; i++) {
+				if (!frozen) {
+					// to avoid data modifications. remember about "sharing" passing arguments in js :) 
+					event.data = $.extend(true, {}, data);
+				}
 
 				try {
 					if (handlers[i](event, this) === false 
@@ -1941,6 +1948,16 @@ window.elFinder = function(node, opts) {
 		}
 
 	});
+
+	(function(){
+		var tm;
+		$(window).on('resize', function(){
+			tm && clearTimeout(tm);
+			tm = setTimeout(function() {
+				self.trigger('resize', {width : node.width(), height : node.height()});
+			}, 200);
+		});
+	})();
 
 	if (self.dragUpload) {
 		node[0].addEventListener('dragenter', function(e) {
@@ -3874,6 +3891,46 @@ elFinder.prototype = {
 
 }
 
+/**
+ * for conpat ex. ie8...
+ *
+ * Object.keys() - JavaScript | MDN
+ * https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Object/keys
+ */
+if (!Object.keys) {
+	Object.keys = (function () {
+		var hasOwnProperty = Object.prototype.hasOwnProperty,
+				hasDontEnumBug = !({toString: null}).propertyIsEnumerable('toString'),
+				dontEnums = [
+					'toString',
+					'toLocaleString',
+					'valueOf',
+					'hasOwnProperty',
+					'isPrototypeOf',
+					'propertyIsEnumerable',
+					'constructor'
+				],
+				dontEnumsLength = dontEnums.length
+
+		return function (obj) {
+			if (typeof obj !== 'object' && typeof obj !== 'function' || obj === null) throw new TypeError('Object.keys called on non-object')
+
+			var result = []
+
+			for (var prop in obj) {
+				if (hasOwnProperty.call(obj, prop)) result.push(prop)
+			}
+
+			if (hasDontEnumBug) {
+				for (var i=0; i < dontEnumsLength; i++) {
+					if (hasOwnProperty.call(obj, dontEnums[i])) result.push(dontEnums[i])
+				}
+			}
+			return result
+		}
+	})()
+};
+
 
 /*
  * File: /js/elFinder.version.js
@@ -3884,7 +3941,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1 (Nightly: 4cc9224)';
+elFinder.prototype.version = '2.1 (Nightly: 88e0324)';
 
 
 
@@ -6322,10 +6379,8 @@ $.fn.elfindercwd = function(fm, options) {
 						last = cwd.find('[id]:last');
 						// scroll top on dir load to avoid scroll after page reload
 						top && wrapper.scrollTop(0);
-						if (top || !buffer._hpi) {
-							buffer._hpi = place.height() / files.length;
-							buffer.length && bottomMarker.css({top: (buffer._hpi * buffer.length + place.height()) + 'px'}).show();
-						}
+						(top || !buffer._hpi) && bottomMarkerShow(place, files.length);
+						if (top) { break; }
 					}
 
 					// cache last
@@ -6518,6 +6573,7 @@ $.fn.elfindercwd = function(fm, options) {
 					}
 				}
 				
+				bottomMarkerShow(place);
 				attachThumbnails(atmb);
 				ltmb.length && loadThumbnails(ltmb);
 				dirs && !mobile && makeDroppable();
@@ -6573,6 +6629,18 @@ $.fn.elfindercwd = function(fm, options) {
 				return customColsName;
 			},
 			
+			bottomMarkerShow = function(place, cnt) {
+				var ph;
+				place = place || (list ? cwd.find('tbody') : cwd);
+
+				if (buffer.length > 0) {
+					place.css({height: 'auto'});
+					ph = place.height();
+					cnt && (buffer._hpi = ph / cnt);
+					bottomMarker.css({top: (buffer._hpi * buffer.length + ph) + 'px'}).show();
+				}
+			},
+			
 			/**
 			 * Update directory content
 			 *
@@ -6581,22 +6649,23 @@ $.fn.elfindercwd = function(fm, options) {
 			 */
 			content = function(files, any) {
 				var phash = fm.cwd().hash; 
-				// console.log(files)
 				
 				unselectAll();
 				
 				try {
 					// to avoid problem with draggable
-					cwd.children('table,'+fileSelector).remove();
+					cwd.empty();
 				} catch (e) {
 					cwd.html('');
 				}
 
 				cwd.removeClass('elfinder-cwd-view-icons elfinder-cwd-view-list')
 					.addClass('elfinder-cwd-view-'+(list ? 'list' :'icons'));
+				cwd.css('height', 'auto');
 				bottomMarker.hide();
 
 				wrapper[list ? 'addClass' : 'removeClass']('elfinder-cwd-wrapper-list');
+				wrapper._padding = parseInt(wrapper.css('padding-top')) + parseInt(wrapper.css('padding-bottom'));
 
 				list && cwd.html('<table><thead><tr class="ui-state-default'+(fm.UA.Touch? ' elfinder-touch' : '')+'"><td class="elfinder-cwd-view-th-name">'+msg.name+'</td>'+customColsNameBuild()+'</tr></thead><tbody/></table>');
 		
@@ -6613,7 +6682,6 @@ $.fn.elfindercwd = function(fm, options) {
 					parent = $(itemhtml(parent))
 						.addClass('elfinder-cwd-parent')
 						.bind('mousedown click mouseup touchstart touchmove touchend dblclick mouseenter', function(e) {
-						//.bind('mousedown click mouseup dblclick mouseenter', function(e) {
 							e.preventDefault();
 							e.stopPropagation();
 						})
@@ -6892,7 +6960,7 @@ $.fn.elfindercwd = function(fm, options) {
 					h += $(this).outerHeight(true);
 				});
 
-				wrapper.height(wz.height() - h);
+				wrapper.height(wz.height() - h - wrapper._padding);
 			},
 			
 			// elfinder node
@@ -6976,6 +7044,11 @@ $.fn.elfindercwd = function(fm, options) {
 				}
 				resize();
 			})
+			.bind('resize', function() {
+				var place = list ? cwd.find('tbody') : cwd;
+				resize();
+				bottomMarkerShow(place, place.find('[id]').length);
+			})
 			.add(function(e) {
 				var phash = fm.cwd().hash,
 					files = query
@@ -7019,7 +7092,7 @@ $.fn.elfindercwd = function(fm, options) {
 				cwdoh = cwd.outerHeight(true);
 				if (cwdoh < wph) {
 					cwd.height(wph - (cwdoh - cwd.height()) - 2);
-				} 
+				}
 			})
 			// select dragged file if no selected, disable selectable
 			.dragstart(function(e) {
