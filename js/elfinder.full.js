@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1_n (Nightly: d2a40bc) (2015-07-04)
+ * Version 2.1_n (Nightly: bfb9d1c) (2015-07-04)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -246,14 +246,6 @@ window.elFinder = function(node, opts) {
 					if (origin && $.inArray(origin, repCmds) == -1) {
 						$('span.elfinder-button-icon-'+$(this).data('origin')).parent().show();
 						$(this).remove();
-					}
-				});
-			}
-			// non cwd volume's contextmenu
-			if (data.files) {
-				$.each(data.files, function(k, v){
-					if (v.volumeid && v.uiCmdMap && v.uiCmdMap.length && !self.options.contextmenu.cmdMaps[v.volumeid]) {
-						self.options.contextmenu.cmdMaps[v.volumeid] = v.uiCmdMap;
 					}
 				});
 			}
@@ -3943,7 +3935,7 @@ if (!Object.keys) {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1_n (Nightly: d2a40bc)';
+elFinder.prototype.version = '2.1_n (Nightly: bfb9d1c)';
 
 
 
@@ -8888,6 +8880,12 @@ $.fn.elfindertree = function(fm, opts) {
 			if (dirs.length) {
 				updateTree(dirs);
 				updateArrows(dirs, loaded);
+				// support volume driver option `uiCmdMap`
+				$.each(dirs, function(k, v){
+					if (v.volumeid && v.uiCmdMap && Object.keys(v.uiCmdMap).length && !fm.options.contextmenu.cmdMaps[v.volumeid]) {
+						fm.options.contextmenu.cmdMaps[v.volumeid] = v.uiCmdMap;
+					}
+				});
 			} 
 			sync(false, dirs);
 		})
