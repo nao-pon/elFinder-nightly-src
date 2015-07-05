@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1_n (Nightly: 130d2ff) (2015-07-05)
+ * Version 2.1_n (Nightly: cc1179a) (2015-07-05)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -3935,7 +3935,7 @@ if (!Object.keys) {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1_n (Nightly: 130d2ff)';
+elFinder.prototype.version = '2.1_n (Nightly: cc1179a)';
 
 
 
@@ -12438,7 +12438,7 @@ elFinder.prototype.commands.rename = function() {
 						
 					}
 				}),
-			node = (type === 'navbar')? $('#'+fm.navHash2Id(file.hash)).contents().filter(function(){ return this.nodeType==3 && $.inArray($(this).parent(),target); }).replaceWith(input.val(file.name))
+			node = (type === 'navbar')? $('#'+fm.navHash2Id(file.hash)).contents().filter(function(){ return this.nodeType==3 && $(this).parent().attr('id') === fm.navHash2Id(file.hash); }).replaceWith(input.val(file.name))
 					                  : cwd.find('#'+file.hash).find(filename).empty().append(input.val(file.name)),
 			name = input.val().replace(/\.((tar\.(gz|bz|bz2|z|lzo))|cpio\.gz|ps\.gz|xcf\.(gz|bz2)|[a-z0-9]{1,4})$/ig, '')
 			;
