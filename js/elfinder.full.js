@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1_n (Nightly: 213fab0) (2015-07-05)
+ * Version 2.1_n (Nightly: 130d2ff) (2015-07-05)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -3935,7 +3935,7 @@ if (!Object.keys) {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1_n (Nightly: 213fab0)';
+elFinder.prototype.version = '2.1_n (Nightly: 130d2ff)';
 
 
 
@@ -4568,7 +4568,7 @@ elFinder.prototype._options = {
 	 */
 	contextmenu : {
 		// navbarfolder menu
-		navbar : ['open', '|', 'upload', '|', 'copy', 'cut', 'paste', 'duplicate', '|', 'rm', '|', 'places', 'info', 'chmod', 'netunmount'],
+		navbar : ['open', '|', 'upload', '|', 'copy', 'cut', 'paste', 'duplicate', '|', 'rm', '|', 'rename', '|', 'places', 'info', 'chmod', 'netunmount'],
 		// current directory menu
 		cwd    : ['reload', 'back', '|', 'upload', 'mkdir', 'mkfile', 'paste', '|', 'sort', '|', 'info'],
 		// current directory file menu
