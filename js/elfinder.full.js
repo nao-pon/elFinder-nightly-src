@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1 (Nightly: 6b9d146) (2015-07-05)
+ * Version 2.1 (Nightly: 760a415) (2015-07-06)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -3935,7 +3935,7 @@ if (!Object.keys) {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1 (Nightly: 6b9d146)';
+elFinder.prototype.version = '2.1 (Nightly: 760a415)';
 
 
 
@@ -8570,13 +8570,14 @@ $.fn.elfindertree = function(fm, opts) {
 			 */
 			findSibling = function(subtree, dir) {
 				var node = subtree.children(':first'),
-					info;
+					info, compare;
 
+				compare = fm.naturalCompare;
 				while (node.length) {
 					info = fm.file(fm.navId2Hash(node.children('[id]').attr('id')));
 					
 					if ((info = fm.file(fm.navId2Hash(node.children('[id]').attr('id')))) 
-					&& dir.name.toLowerCase().localeCompare(info.name.toLowerCase()) < 0) {
+					&& compare(dir.name, info.name) < 0) {
 						return node;
 					}
 					node = node.next();
@@ -8594,7 +8595,7 @@ $.fn.elfindertree = function(fm, opts) {
 				var length  = dirs.length,
 					orphans = [],
 					i = dirs.length,
-					dir, html, parent, sibling;
+					dir, html, parent, sibling, init, atonce = {};
 
 				var firstVol = true; // check for netmount volume
 				while (i--) {
@@ -8605,11 +8606,17 @@ $.fn.elfindertree = function(fm, opts) {
 					}
 					
 					if ((parent = findSubtree(dir.phash)).length) {
-						html = itemhtml(dir);
-						if (dir.phash && (sibling = findSibling(parent, dir)).length) {
-							sibling.before(html);
+						if (dir.phash && ((init = !parent.children().length) || (sibling = findSibling(parent, dir)).length)) {
+							if (init) {
+								if (!atonce[dir.phash]) {
+									atonce[dir.phash] = [];
+								}
+								atonce[dir.phash].push(dir);
+							} else {
+								sibling.before(itemhtml(dir));
+							}
 						} else {
-							parent[firstVol || dir.phash ? 'append' : 'prepend'](html);
+							parent[firstVol || dir.phash ? 'append' : 'prepend'](itemhtml(dir));
 							firstVol = false;
 						}
 					} else {
@@ -8617,6 +8624,19 @@ $.fn.elfindertree = function(fm, opts) {
 					}
 				}
 
+				// When init, html append at once
+				if (Object.keys(atonce).length){
+					$.each(atonce, function(p, dirs){
+						var parent = findSubtree(p),
+						    html   = [];
+						dirs.sort(compare);
+						$.each(dirs, function(i, d){
+							html.push(itemhtml(d));
+						});
+						parent.append(html.join(''));
+					});
+				}
+				
 				if (orphans.length && orphans.length < length) {
 					return updateTree(orphans);
 				} 
@@ -8629,6 +8649,14 @@ $.fn.elfindertree = function(fm, opts) {
 				
 			},
 			
+			/**
+			 * sort function by dir.name
+			 * 
+			 */
+			compare = function(dir1, dir2) {
+				return fm.naturalCompare(dir1.name, dir2.name);
+			},
+
 			/**
 			 * Auto scroll to cwd
 			 *
