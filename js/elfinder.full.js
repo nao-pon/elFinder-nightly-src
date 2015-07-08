@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1_n (Nightly: 117f4c6) (2015-07-08)
+ * Version 2.1_n (Nightly: 443e413) (2015-07-08)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -634,7 +634,7 @@ window.elFinder = function(node, opts) {
 
 		},
 		drag       : function(e, ui) {
-			if (ui.helper.data('refreshPositions')) {
+			if (ui.helper.data('refreshPositions') && $(this).draggable('instance')) {
 				if (ui.helper.data('refreshPositions') > 0) {
 					$(this).draggable('option', { refreshPositions : true });
 					ui.helper.data('refreshPositions', -1);
@@ -3947,7 +3947,7 @@ if (!Object.keys) {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1_n (Nightly: 117f4c6)';
+elFinder.prototype.version = '2.1_n (Nightly: 443e413)';
 
 
 
@@ -8876,7 +8876,16 @@ $.fn.elfindertree = function(fm, opts) {
 
 					if (link.is('.'+loaded)) {
 						link.toggleClass(expanded);
-						stree.slideToggle('normal', function(){ fm.draggingUiHelper && fm.draggingUiHelper.data('refreshPositions', 1); })
+						stree.slideToggle('normal', function(){
+							if (!mobile) {
+								if (link.hasClass(expanded)) {
+									link.nextAll().find('span.ui-droppable-disabled:visible').droppable('enable');
+								} else {
+									link.nextAll().find('span.ui-droppable:not(.ui-droppable-disabled)').droppable('disable');
+								}
+								fm.draggingUiHelper && fm.draggingUiHelper.data('refreshPositions', 1);
+							}
+						});
 					} else {
 						spinner.insertBefore(arrow);
 						link.removeClass(collapsed);
