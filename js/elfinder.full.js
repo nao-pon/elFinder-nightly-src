@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1 (Nightly: 760a415) (2015-07-06)
+ * Version 2.1 (Nightly: 92c6dce) (2015-07-08)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -613,7 +613,7 @@ window.elFinder = function(node, opts) {
 		delay      : 30,
 		distance   : 8,
 		revert     : true,
-		refreshPositions : true,
+		refreshPositions : false,
 		cursor     : 'move',
 		cursorAt   : {left : 50, top : 47},
 		start      : function(e, ui) {
@@ -633,8 +633,20 @@ window.elFinder = function(node, opts) {
 			!locked && self.trigger('lockfiles', {files : targets});
 
 		},
+		drag       : function(e, ui) {
+			if (ui.helper.data('refreshPositions')) {
+				if (ui.helper.data('refreshPositions') > 0) {
+					$(this).draggable('option', { refreshPositions : true });
+					ui.helper.data('refreshPositions', -1);
+				} else {
+					$(this).draggable('option', { refreshPositions : false });
+					ui.helper.data('refreshPositions', null);
+				}
+			}
+		},
 		stop       : function(e, ui) {
 			var files;
+			$(this).draggable('option', { refreshPositions : false });
 			self.draggingUiHelper = null;
 			self.trigger('focus').trigger('dragstop');
 			if (! ui.helper.data('droped')) {
@@ -3935,7 +3947,7 @@ if (!Object.keys) {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1 (Nightly: 760a415)';
+elFinder.prototype.version = '2.1 (Nightly: 92c6dce)';
 
 
 
@@ -8862,7 +8874,7 @@ $.fn.elfindertree = function(fm, opts) {
 
 					if (link.is('.'+loaded)) {
 						link.toggleClass(expanded);
-						stree.slideToggle()
+						stree.slideToggle('normal', function(){ fm.draggingUiHelper && fm.draggingUiHelper.data('refreshPositions', 1); })
 					} else {
 						spinner.insertBefore(arrow);
 						link.removeClass(collapsed);
@@ -8873,7 +8885,7 @@ $.fn.elfindertree = function(fm, opts) {
 								
 								if (stree.children().length) {
 									link.addClass(collapsed+' '+expanded);
-									stree.slideDown();
+									stree.slideDown('normal', function(){ fm.draggingUiHelper && fm.draggingUiHelper.data('refreshPositions', 1); });
 								} 
 								sync(true);
 							})
