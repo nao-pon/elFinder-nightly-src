@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1_n (Nightly: 443e413) (2015-07-08)
+ * Version 2.1_n (Nightly: 5fd7a9c) (2015-07-09)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -3947,7 +3947,7 @@ if (!Object.keys) {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1_n (Nightly: 443e413)';
+elFinder.prototype.version = '2.1_n (Nightly: 5fd7a9c)';
 
 
 
@@ -4203,7 +4203,16 @@ elFinder.prototype._options = {
 				// 	 * @param  Object      wysisyg instance (if was returned by "load" callback)
 				// 	 * @return void
 				// 	 */
-				// 	save : function(textarea, editor) {}
+				// 	save : function(textarea, instance) {},
+				// 	/**
+				// 	 * Called after load() or save().
+				// 	 * Set focus to wysisyg editor.
+				// 	 *
+				// 	 * @param  DOMElement  textarea node
+				// 	 * @param  Object      wysisyg instance (if was returned by "load" callback)
+				// 	 * @return void
+				// 	 */
+				// 	focus : function(textarea, instance) {}
 				// 
 				// }
 			]
@@ -9792,7 +9801,7 @@ elFinder.prototype.commands.edit = function() {
 				ta   = $('<textarea class="elfinder-file-edit" rows="20" id="'+id+'-ta">'+fm.escape(content)+'</textarea>'),
 				save = function() {
 					ta.editor && ta.editor.save(ta[0], ta.editor.instance);
-					dfrd.notify(ta.getContent());
+					dfrd.notifyWith(ta);
 				},
 				cancel = function() {
 					dfrd.reject();
@@ -9814,7 +9823,10 @@ elFinder.prototype.commands.edit = function() {
 						fm.disable();
 						ta.focus(); 
 						ta[0].setSelectionRange && ta[0].setSelectionRange(0, 0);
-						ta.editor && ta.editor.load(ta[0]);
+						if (ta.editor) {
+							ta.editor.instance = ta.editor.load(ta[0]) || null;
+							ta.editor.focus(ta[0], ta.editor.instance);
+						}
 					}
 					
 				};
@@ -9831,6 +9843,7 @@ elFinder.prototype.commands.edit = function() {
 							load     : editor.load,
 							save     : editor.save,
 							close    : typeof editor.close == 'function' ? editor.close : function() {},
+							focus    : typeof editor.focus == 'function' ? editor.focus : function() {},
 							instance : null
 						};
 						
@@ -9868,7 +9881,7 @@ elFinder.prototype.commands.edit = function() {
 							}
 						}
 						
-					});
+					}).on('mouseenter', function(){this.focus();});
 				}
 				
 				opts.buttons[fm.i18n('btnSave')]      = save;
@@ -9910,7 +9923,7 @@ elFinder.prototype.commands.edit = function() {
 			
 			fm.request({
 				data   : {cmd : 'get', target  : hash, conv : conv},
-				notify : {type : 'openfile', cnt : 1},
+				notify : {type : 'file', cnt : 1},
 				syncOnFail : true
 			})
 			.done(function(data) {
@@ -9931,13 +9944,14 @@ elFinder.prototype.commands.edit = function() {
 					});
 				} else {
 					dialog(id, file, data.content)
-						.progress(function(content) {
+						.progress(function() {
+							var ta = this;
 							fm.request({
 								options : {type : 'post'},
 								data : {
 									cmd     : 'put',
 									target  : hash,
-									content : content
+									content : ta.getContent()
 								},
 								notify : {type : 'save', cnt : 1},
 								syncOnFail : true
@@ -9948,6 +9962,10 @@ elFinder.prototype.commands.edit = function() {
 							.done(function(data) {
 								data.changed && data.changed.length && fm.change(data);
 								dfrd.resolve(data);
+								setTimeout(function(){
+									ta.focus();
+									ta.editor && ta.editor.focus(ta[0], ta.editor.instance);
+								}, 50);
 							});
 						});
 				}
@@ -12492,11 +12510,11 @@ elFinder.prototype.commands.rename = function() {
 			name = input.val().replace(/\.((tar\.(gz|bz|bz2|z|lzo))|cpio\.gz|ps\.gz|xcf\.(gz|bz2)|[a-z0-9]{1,4})$/ig, '')
 			;
 		
-		if (this.getstate([file.hash]) < 0) {
+		if (cnt > 1 || this.getstate([file.hash]) < 0) {
 			return dfrd.reject();
 		}
 		
-		if (!file || cnt > 1 || !node.length) {
+		if (!file || !node.length) {
 			return dfrd.reject('errCmdParams', this.title);
 		}
 		
