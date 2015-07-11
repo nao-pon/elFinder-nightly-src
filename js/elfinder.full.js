@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1 (Nightly: 932e146) (2015-07-11)
+ * Version 2.1 (Nightly: 65d957a) (2015-07-11)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -212,16 +212,17 @@ window.elFinder = function(node, opts) {
 			
 		syncInterval,
 		
-		uiCmdMapPrev = null,
+		uiCmdMapPrev = '',
+		
 		open = function(data) {
 			var volumeid, contextmenu;
 			
 			self.commandMap = (data.options.uiCmdMap && Object.keys(data.options.uiCmdMap).length)? data.options.uiCmdMap : {};
 			
 			// support volume driver option `uiCmdMap`
-			if (data && data.options && uiCmdMapPrev !== self.commandMap) {
-				uiCmdMapPrev = self.commandMap;
-				if (Object.keys(uiCmdMapPrev).length) {
+			if (uiCmdMapPrev !== JSON.stringify(self.commandMap)) {;
+				uiCmdMapPrev = JSON.stringify(self.commandMap);
+				if (Object.keys(self.commandMap).length) {
 					// for contextmenu
 					contextmenu = self.getUI('contextmenu');
 					if (!contextmenu.data('cmdMaps')) {
@@ -229,7 +230,7 @@ window.elFinder = function(node, opts) {
 					}
 					volumeid = data.cwd? data.cwd.volumeid : null;
 					if (volumeid && !contextmenu.data('cmdMaps')[volumeid]) {
-						contextmenu.data('cmdMaps')[volumeid] = uiCmdMapPrev;
+						contextmenu.data('cmdMaps')[volumeid] = self.commandMap;
 					}
 				}
 			}
@@ -3939,7 +3940,7 @@ if (!Object.keys) {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1 (Nightly: 932e146)';
+elFinder.prototype.version = '2.1 (Nightly: 65d957a)';
 
 
 
@@ -8337,6 +8338,7 @@ $.fn.elfindertoolbar = function(fm, opts) {
 			self     = $(this).addClass('ui-helper-clearfix ui-widget-header ui-corner-top elfinder-toolbar'),
 			panels   = opts || [],
 			dispre   = [],
+			uiCmdMapPrev = '',
 			l, i, cmd, panel, button;
 		
 		self.prev().length && self.parent().prepend(this);
@@ -8369,17 +8371,18 @@ $.fn.elfindertoolbar = function(fm, opts) {
 		render();
 		
 		fm.bind('open', function(){
-			var repCmds = [], uiCmdMapPrev = {};
-			var disabled = fm.option('disabled');
+			var repCmds = [],
+			disabled = fm.option('disabled');
+
 			if (dispre.toString() !== disabled.sort().toString()) {
 				render(disabled && disabled.length? disabled : null);
 			}
 			dispre = disabled.concat().sort();
 
-			if (uiCmdMapPrev != fm.commandMap) {
-				uiCmdMapPrev = fm.commandMap;
-				if (Object.keys(uiCmdMapPrev).length) {
-					$.each(uiCmdMapPrev, function(from, to){
+			if (uiCmdMapPrev !== JSON.stringify(fm.commandMap)) {
+				uiCmdMapPrev = JSON.stringify(fm.commandMap);
+				if (Object.keys(fm.commandMap).length) {
+					$.each(fm.commandMap, function(from, to){
 						var cmd = fm._commands[to],
 						button = cmd? 'elfinder'+cmd.options.ui : null;
 						if (button && $.fn[button]) {
@@ -8983,7 +8986,6 @@ $.fn.elfindertree = function(fm, opts) {
 		fm.open(function(e) {
 			var data = e.data,
 				dirs = filter(data.files),
-				//opContextmenu = fm.options.contextmenu,
 				contextmenu = fm.getUI('contextmenu');
 
 			data.init && tree.empty();
