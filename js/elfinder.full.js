@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1 (Nightly: 0145559) (2015-07-30)
+ * Version 2.1 (Nightly: b92468c) (2015-07-31)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -3951,7 +3951,7 @@ if (!Object.keys) {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1 (Nightly: 0145559)';
+elFinder.prototype.version = '2.1 (Nightly: b92468c)';
 
 
 
@@ -7198,10 +7198,10 @@ $.fn.elfindercwd = function(fm, options) {
 			.bind('open add search searchend viewchange', function() {
 				cwd.css('height', 'auto');
 
-				var wph = wrapper[0].clientHeight,
+				var wph = wrapper[0].clientHeight - parseInt(wrapper.css('padding-top')) - parseInt(wrapper.css('padding-bottom')),
 				cwdoh = cwd.outerHeight(true);
 				if (cwdoh < wph) {
-					cwd.height(wph - (cwdoh - cwd.height()) - 2);
+					cwd.height(wph);
 				}
 			})
 			// select dragged file if no selected, disable selectable
@@ -8191,6 +8191,7 @@ $.fn.elfindersearchbutton = function(cmd) {
 				)
 				.hide()
 				.zIndex(12+button.zIndex())
+				.css('overflow', 'hidden')
 				.appendTo(button);
 		
 		$('<span class="ui-icon ui-icon-search" title="'+cmd.title+'"/>')
