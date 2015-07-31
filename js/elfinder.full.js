@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1 (Nightly: e85e0fa) (2015-07-31)
+ * Version 2.1 (Nightly: 61f6a32) (2015-07-31)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -3951,7 +3951,7 @@ if (!Object.keys) {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1 (Nightly: e85e0fa)';
+elFinder.prototype.version = '2.1 (Nightly: 61f6a32)';
 
 
 
@@ -8231,18 +8231,20 @@ $.fn.elfindersearchbutton = function(cmd) {
 		// wait when button will be added to DOM
 		toolbar.on('load', function(){
 			var parent = button.parent();
-			toolbar.children('.'+btnCls).remove();
-			toolbar.prepend(button.show());
-			parent.remove();
-			// position icons for ie7
-			if (fm.UA.ltIE7) {
-				var icon = button.children(fm.direction == 'ltr' ? '.ui-icon-close' : '.ui-icon-search');
-				icon.css({
-					right : '',
-					left  : parseInt(button.width())-icon.outerWidth(true)
-				});
+			if (parent.length) {
+				toolbar.children('.'+btnCls).remove();
+				toolbar.prepend(button.show());
+				parent.remove();
+				// position icons for ie7
+				if (fm.UA.ltIE7) {
+					var icon = button.children(fm.direction == 'ltr' ? '.ui-icon-close' : '.ui-icon-search');
+					icon.css({
+						right : '',
+						left  : parseInt(button.width())-icon.outerWidth(true)
+					});
+				}
+				fm.resize();
 			}
-			fm.resize();
 		});
 		
 		fm
