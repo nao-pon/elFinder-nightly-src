@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1 (Nightly: b92468c) (2015-07-31)
+ * Version 2.1 (Nightly: 857219b) (2015-07-31)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -3951,7 +3951,7 @@ if (!Object.keys) {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1 (Nightly: b92468c)';
+elFinder.prototype.version = '2.1 (Nightly: 857219b)';
 
 
 
@@ -7062,14 +7062,26 @@ $.fn.elfindercwd = function(fm, options) {
 				.css({position: 'absolute', width: '1px', height: '1px'})
 				.hide(),
 			
+			restm = null,
 			resize = function() {
-				var h = 0;
+				restm && clearTimeout(restm);
+				restm = setTimeout(function(){
+					var h = 0, wph, cwdoh;
 
-				wrapper.siblings('.elfinder-panel:visible').each(function() {
-					h += $(this).outerHeight(true);
-				});
+					wrapper.siblings('div.elfinder-panel:visible').each(function() {
+						h += $(this).outerHeight(true);
+					});
 
-				wrapper.height(wz.height() - h - wrapper._padding);
+					wrapper.height(wz.height() - h - wrapper._padding);
+
+					// fix cwd height if it less then wrapper
+					cwd.css('height', 'auto');
+					wph = wrapper[0].clientHeight - parseInt(wrapper.css('padding-top')) - parseInt(wrapper.css('padding-bottom')),
+					cwdoh = cwd.outerHeight(true);
+					if (cwdoh < wph) {
+						cwd.height(wph);
+					}
+				}, 200);
 			},
 			
 			// elfinder node
@@ -7120,11 +7132,12 @@ $.fn.elfindercwd = function(fm, options) {
 		fm
 			.bind('open', function(e) {
 				content(e.data.files);
-				e.data.init && resize();
+				resize();
 			})
 			.bind('search', function(e) {
 				lastSearch = e.data.files;
 				content(lastSearch, true);
+				resize();
 			})
 			.bind('searchend', function() {
 				lastSearch = [];
@@ -7132,6 +7145,7 @@ $.fn.elfindercwd = function(fm, options) {
 					query = '';
 					content(fm.files());
 				}
+				resize();
 			})
 			.bind('searchstart', function(e) {
 				query = e.data.query;
@@ -7158,6 +7172,9 @@ $.fn.elfindercwd = function(fm, options) {
 				var place = list ? cwd.find('tbody') : cwd;
 				resize();
 				bottomMarkerShow(place, place.find('[id]').length);
+			})
+			.bind('add', function() {
+				resize();
 			})
 			.add(function(e) {
 				var phash = fm.cwd().hash,
@@ -7193,16 +7210,6 @@ $.fn.elfindercwd = function(fm, options) {
 			.remove(function(e) {
 				remove(e.data.removed || []);
 				trigger();
-			})
-			// fix cwd height if it less then wrapper
-			.bind('open add search searchend viewchange', function() {
-				cwd.css('height', 'auto');
-
-				var wph = wrapper[0].clientHeight - parseInt(wrapper.css('padding-top')) - parseInt(wrapper.css('padding-bottom')),
-				cwdoh = cwd.outerHeight(true);
-				if (cwdoh < wph) {
-					cwd.height(wph);
-				}
 			})
 			// select dragged file if no selected, disable selectable
 			.dragstart(function(e) {
@@ -8117,8 +8124,9 @@ $.fn.elfindersearchbutton = function(cmd) {
 		var result = false,
 			fm     = cmd.fm,
 			id     = function(name){return fm.namespace + name},
-			timer  = null,
-			button = $(this).hide().addClass('ui-widget-content elfinder-button '+fm.res('class', 'searchbtn')+''),
+			toolbar= fm.getUI('toolbar'),
+			btnCls = fm.res('class', 'searchbtn'),
+			button = $(this).hide().addClass('ui-widget-content elfinder-button '+btnCls),
 			search = function() {
 				opts.slideUp();
 				var val = $.trim(input.val()),
@@ -8217,9 +8225,11 @@ $.fn.elfindersearchbutton = function(cmd) {
 		});
 		
 		// wait when button will be added to DOM
-		setTimeout(function() {
-			button.parent().detach();
-			fm.getUI('toolbar').prepend(button.show());
+		toolbar.on('load', function(){
+			var parent = button.parent();
+			toolbar.children('.'+btnCls).remove();
+			toolbar.prepend(button.show());
+			parent.remove();
 			// position icons for ie7
 			if (fm.UA.ltIE7) {
 				var icon = button.children(fm.direction == 'ltr' ? '.ui-icon-close' : '.ui-icon-search');
@@ -8228,7 +8238,8 @@ $.fn.elfindersearchbutton = function(cmd) {
 					left  : parseInt(button.width())-icon.outerWidth(true)
 				});
 			}
-		}, 200);
+			fm.resize();
+		});
 		
 		fm
 			.select(function() {
@@ -8430,7 +8441,7 @@ $.fn.elfindertoolbar = function(fm, opts) {
 		var commands = fm._commands,
 			self     = $(this).addClass('ui-helper-clearfix ui-widget-header ui-corner-top elfinder-toolbar'),
 			panels   = opts || [],
-			dispre   = [],
+			dispre   = null,
 			uiCmdMapPrev = '',
 			l, i, cmd, panel, button;
 		
@@ -8459,6 +8470,7 @@ $.fn.elfindertoolbar = function(fm, opts) {
 			}
 			
 			self.children().length? self.show() : self.hide();
+			self.trigger('load');
 		};
 		
 		render();
@@ -8467,7 +8479,7 @@ $.fn.elfindertoolbar = function(fm, opts) {
 			var repCmds = [],
 			disabled = fm.option('disabled');
 
-			if (dispre.toString() !== disabled.sort().toString()) {
+			if (!dispre || dispre.toString() !== disabled.sort().toString()) {
 				render(disabled && disabled.length? disabled : null);
 			}
 			dispre = disabled.concat().sort();
