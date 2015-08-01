@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1_n (Nightly: b4af4f4) (2015-08-01)
+ * Version 2.1_n (Nightly: 33c197e) (2015-08-02)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -3977,7 +3977,7 @@ if (!Object.keys) {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1_n (Nightly: b4af4f4)';
+elFinder.prototype.version = '2.1_n (Nightly: 33c197e)';
 
 
 
@@ -6420,7 +6420,7 @@ $.fn.elfindercwd = function(fm, options) {
 			selectedFiles = [],
 			
 			selectFile = function(hash) {
-				cwd.find('#'+hash).trigger(evtSelect);
+				$('#'+hash).trigger(evtSelect);
 			},
 			
 			selectAll = function() {
@@ -6644,7 +6644,7 @@ $.fn.elfindercwd = function(fm, options) {
 					ndx;
 				
 				$.each(images, function(hash, tmb) {
-					var node = cwd.find('#'+hash);
+					var node = $('#'+hash);
 
 					if (node.length) {
 
@@ -6739,7 +6739,7 @@ $.fn.elfindercwd = function(fm, options) {
 					file = files[l];
 					hash = file.hash;
 					
-					if (cwd.find('#'+hash).length) {
+					if ($('#'+hash).length) {
 						continue;
 					}
 					
@@ -6751,7 +6751,7 @@ $.fn.elfindercwd = function(fm, options) {
 						place.append(itemhtml(file));
 					}
 					
-					if (cwd.find('#'+hash).length) {
+					if ($('#'+hash).length) {
 						if (file.mime == 'directory') {
 							dirs = true;
 						} else if (file.tmb) {
@@ -6777,7 +6777,7 @@ $.fn.elfindercwd = function(fm, options) {
 				
 				while (l--) {
 					hash = files[l];
-					if ((n = cwd.find('#'+hash)).length) {
+					if ((n = $('#'+hash)).length) {
 						try {
 							n.remove();
 						} catch(e) {
@@ -7104,7 +7104,7 @@ $.fn.elfindercwd = function(fm, options) {
 				// unselect all selected files
 				.bind('unselectall', unselectAll)
 				.bind('selectfile', function(e, id) {
-					cwd.find('#'+id).trigger(evtSelect);
+					$('#'+id).trigger(evtSelect);
 					trigger();
 				}),
 			wrapper = $('<div class="elfinder-cwd-wrapper"/>')
@@ -7331,7 +7331,7 @@ $.fn.elfindercwd = function(fm, options) {
 					l      = files.length;
 				
 				while (l--) {
-					cwd.find('#'+files[l]).trigger(event);
+					$('#'+files[l]).trigger(event);
 				}
 				trigger();
 			})
