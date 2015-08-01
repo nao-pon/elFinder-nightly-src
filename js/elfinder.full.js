@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1_n (Nightly: 13572a7) (2015-08-01)
+ * Version 2.1_n (Nightly: b4af4f4) (2015-08-01)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -3042,6 +3042,8 @@ elFinder.prototype = {
 		var locHash = window.location.hash;
 		if (locHash && locHash.match(/^#elf_/)) {
 			return locHash.replace(/^#elf_/, '');
+		} else if (this.options.startPathHash) {
+			return this.options.startPathHash;
 		} else {
 			return this.lastDir();
 		}
@@ -3975,7 +3977,7 @@ if (!Object.keys) {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1_n (Nightly: 13572a7)';
+elFinder.prototype.version = '2.1_n (Nightly: b4af4f4)';
 
 
 
@@ -4417,6 +4419,14 @@ elFinder.prototype._options = {
 	 * @default "icons"
 	 */
 	defaultView : 'icons',
+	
+	/**
+	 * Hash of default directory path to open
+	 * 
+	 * @type String
+	 * @default ""
+	 */
+	startPathHash : '',
 	
 	/**
 	 * UI plugins to load.
