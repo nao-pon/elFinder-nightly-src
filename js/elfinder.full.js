@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1 (Nightly: 1222242) (2015-08-11)
+ * Version 2.1 (Nightly: 4d5877e) (2015-08-11)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -3988,7 +3988,7 @@ if (!Object.keys) {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1 (Nightly: 1222242)';
+elFinder.prototype.version = '2.1 (Nightly: 4d5877e)';
 
 
 
@@ -7306,7 +7306,7 @@ $.fn.elfindercwd = function(fm, options) {
 						target.trigger(evtSelect);
 						trigger();
 					}
-					cwd.droppable('disable');
+					wrapper.droppable('disable');
 				}
 				
 				cwd.selectable('disable').removeClass(clDisabled);
@@ -7314,7 +7314,8 @@ $.fn.elfindercwd = function(fm, options) {
 			})
 			// enable selectable
 			.dragstop(function() {
-				cwd.selectable('enable').droppable('enable');
+				cwd.selectable('enable');
+				wrapper.droppable('enable');
 				selectLock = false;
 			})
 			.bind('lockfiles unlockfiles selectfiles unselectfiles', function(e) {
