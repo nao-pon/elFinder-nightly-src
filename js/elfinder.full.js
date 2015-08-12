@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.x (Nightly: b29b8be) (2015-08-07)
+ * Version 2.x (Nightly: dc6b1ec) (2015-08-12)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -3044,7 +3044,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.x (Nightly: b29b8be)';
+elFinder.prototype.version = '2.x (Nightly: dc6b1ec)';
 
 
 
@@ -7972,7 +7972,7 @@ elFinder.prototype.commands.edit = function() {
 					ta.elfinderdialog('close');
 				},
 				opts = {
-					title   : file.name,
+					title   : fm.escape(file.name),
 					width   : self.options.dialogWidth || 450,
 					buttons : {},
 					close   : function() { 
@@ -8148,6 +8148,7 @@ elFinder.prototype.commands.edit = function() {
 	}
 
 }
+
 
 /*
  * File: /js/commands/extract.js
@@ -10923,7 +10924,7 @@ elFinder.prototype.commands.resize = function() {
 				buttons[fm.i18n('btnCancel')] = function() { dialog.elfinderdialog('close'); };
 				
 				fm.dialog(dialog, {
-					title          : file.name,
+					title          : fm.escape(file.name),
 					width          : 650,
 					resizable      : false,
 					destroyOnClose : true,
@@ -11505,6 +11506,7 @@ elFinder.prototype.commands.upload = function() {
 	}
 
 }
+
 
 /*
  * File: /js/commands/view.js
