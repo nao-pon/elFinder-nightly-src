@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1 (Nightly: 74087d9) (2015-09-11)
+ * Version 2.1 (Nightly: 9130005) (2015-09-11)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -2461,7 +2461,6 @@ elFinder.prototype = {
 							files = [{_chunkfail: true}];
 							formData.append('chunk', file._chunk);
 							formData.append('cid'  , file._cid);
-							formData.append('range', file._range);
 							isDataType = false;
 							send(files);
 						}
@@ -2522,6 +2521,9 @@ elFinder.prototype = {
 			// regist abort event
 			self.ui.notify.one('click', cancelBtn, fnAbort);
 			$(document).on('keydown', fnAbort);
+			$(window).on('unload', function(e){
+				(dfrd.state() == 'pending') && dfrd.reject();
+			});
 			
 			!chunkMerge && (prev = loaded);
 			
@@ -4076,7 +4078,7 @@ if (!Object.keys) {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1 (Nightly: 74087d9)';
+elFinder.prototype.version = '2.1 (Nightly: 9130005)';
 
 
 
