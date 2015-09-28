@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.x (Nightly: 92f6726) (2015-09-11)
+ * Version 2.x (Nightly: 8f9f39a) (2015-09-28)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -1854,8 +1854,8 @@ elFinder.prototype = {
 			'application/vnd.ms-word.document.macroEnabled.12'                        : 'MsWord',
 			'application/vnd.openxmlformats-officedocument.wordprocessingml.template' : 'MsWord',
 			'application/vnd.ms-word.template.macroEnabled.12'                        : 'MsWord',
-			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'       : 'MsWord',
 			'application/vnd.ms-excel'      : 'MsExcel',
+			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'       : 'MsExcel',
 			'application/vnd.ms-excel.sheet.macroEnabled.12'                          : 'MsExcel',
 			'application/vnd.openxmlformats-officedocument.spreadsheetml.template'    : 'MsExcel',
 			'application/vnd.ms-excel.template.macroEnabled.12'                       : 'MsExcel',
@@ -3023,7 +3023,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.x (Nightly: 92f6726)';
+elFinder.prototype.version = '2.x (Nightly: 8f9f39a)';
 
 
 
