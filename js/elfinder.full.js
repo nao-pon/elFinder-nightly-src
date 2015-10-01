@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1_n (Nightly: 02bac5b) (2015-10-01)
+ * Version 2.1_n (Nightly: f328f40) (2015-10-02)
  * http://elfinder.org
  * 
  * Copyright 2009-2015, Studio 42
@@ -4096,7 +4096,7 @@ if (!Object.keys) {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1_n (Nightly: 02bac5b)';
+elFinder.prototype.version = '2.1_n (Nightly: f328f40)';
 
 
 
@@ -9267,7 +9267,7 @@ $.fn.elfindertree = function(fm, opts) {
 					fm.trigger('searchend');
 				
 					if (hash != fm.cwd().hash && !link.hasClass(disabled)) {
-						fm.exec('open', file.thash || hash, {thash: file.thash});
+						fm.exec('open', hash);
 					} else if (link.hasClass(collapsed)) {
 						link.children('.'+arrow).click();
 					}
@@ -11643,7 +11643,7 @@ elFinder.prototype.commands.open = function() {
 			return !thash && file && !file.read
 				? dfrd.reject(['errOpen', file.name, 'errPerm'])
 				: fm.request({
-						data   : {cmd  : 'open', target : thash || file.thash || file.hash},
+						data   : {cmd  : 'open', target : thash || file.hash},
 						notify : {type : 'open', cnt : 1, hideCnt : true},
 						syncOnFail : true
 					});
