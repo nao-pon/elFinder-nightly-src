@@ -1,5 +1,51 @@
 <?php
-
+/**
+ * elFinder Plugin AutoResize
+ *
+ * Auto resize on file upload.
+ *
+ * ex. binding, configure on connector options
+ *	$opts = array(
+ *		'bind' => array(
+ *			'upload.presave' => array(
+ *				'Plugin.AutoResize.onUpLoadPreSave'
+ *			)
+ *		),
+ *		// global configure (optional)
+ *		'plugin' => array(
+ *			'AutoResize' => array(
+ *				'enable'         => true,       // For control by volume driver
+ *				'maxWidth'       => 1024,       // Path to Water mark image
+ *				'maxHeight'      => 1024,       // Margin right pixel
+ *				'quality'        => 95,         // JPEG image save quality
+ *				'preserveExif'   => false,      // Preserve EXIF data (Imagick only)
+ *				'targetType'     => IMG_GIF|IMG_JPG|IMG_PNG|IMG_WBMP // Target image formats ( bit-field )
+ *			)
+ *		),
+ *		// each volume configure (optional)
+ *		'roots' => array(
+ *			array(
+ *				'driver' => 'LocalFileSystem',
+ *				'path'   => '/path/to/files/',
+ *				'URL'    => 'http://localhost/to/files/'
+ *				'plugin' => array(
+ *					'AutoResize' => array(
+ *						'enable'         => true,       // For control by volume driver
+ *						'maxWidth'       => 1024,       // Path to Water mark image
+ *						'maxHeight'      => 1024,       // Margin right pixel
+ *						'quality'        => 95,         // JPEG image save quality
+ *						'preserveExif'   => false,      // Preserve EXIF data (Imagick only)
+ *						'targetType'     => IMG_GIF|IMG_JPG|IMG_PNG|IMG_WBMP // Target image formats ( bit-field )
+ *					)
+ *				)
+ *			)
+ *		)
+ *	);
+ *
+ * @package elfinder
+ * @author Naoki Sawada
+ * @license New BSD
+ */
 class elFinderPluginAutoResize {
 
 	private $opts = array();
@@ -10,6 +56,7 @@ class elFinderPluginAutoResize {
 			'maxWidth'       => 1024,       // Path to Water mark image
 			'maxHeight'      => 1024,       // Margin right pixel
 			'quality'        => 95,         // JPEG image save quality
+			'preserveExif'   => false,      // Preserve EXIF data (Imagick only)
 			'targetType'     => IMG_GIF|IMG_JPG|IMG_PNG|IMG_WBMP // Target image formats ( bit-field )
 		);
 
@@ -45,19 +92,19 @@ class elFinderPluginAutoResize {
 		}
 		
 		if ($srcImgInfo[0] > $opts['maxWidth'] || $srcImgInfo[1] > $opts['maxHeight']) {
-			return $this->resize($src, $srcImgInfo, $opts['maxWidth'], $opts['maxHeight'], $opts['quality']);
+			return $this->resize($src, $srcImgInfo, $opts['maxWidth'], $opts['maxHeight'], $opts['quality'], $opts['preserveExif']);
 		}
 		
 		return false;
 	}
 	
-	private function resize($src, $srcImgInfo, $maxWidth, $maxHeight, $quality) {
+	private function resize($src, $srcImgInfo, $maxWidth, $maxHeight, $quality, $preserveExif) {
 		$zoom = min(($maxWidth/$srcImgInfo[0]),($maxHeight/$srcImgInfo[1]));
 		$width = round($srcImgInfo[0] * $zoom);
 		$height = round($srcImgInfo[1] * $zoom);
 		
-		if (class_exists('Imagick')) {
-			return $this->resize_imagick($src, $width, $height, $quality);
+		if (class_exists('Imagick', false)) {
+			return $this->resize_imagick($src, $width, $height, $quality, $preserveExif);
 		} else {
 			return $this->resize_gd($src, $width, $height, $quality, $srcImgInfo);
 		}
@@ -133,13 +180,24 @@ class elFinderPluginAutoResize {
 		return false;
 	}
 	
-	private function resize_imagick($src, $width, $height, $quality) {
+	private function resize_imagick($src, $width, $height, $quality, $preserveExif) {
 		try {
 			$img = new imagick($src);
-		
+			
 			if (strtoupper($img->getImageFormat()) === 'JPEG') {
 				$img->setImageCompression(imagick::COMPRESSION_JPEG);
-				$img->setCompressionQuality($quality);
+				$img->setImageCompressionQuality($quality);
+				if (!$preserveExif) {
+					try {
+						$orientation = $img->getImageOrientation();
+					} catch (ImagickException $e) {
+						$orientation = 0;
+					}
+					$img->stripImage();
+					if ($orientation) {
+						$img->setImageOrientation($orientation);
+					}
+				}
 			}
 			
 			$img->resizeImage($width, $height, Imagick::FILTER_LANCZOS, true);

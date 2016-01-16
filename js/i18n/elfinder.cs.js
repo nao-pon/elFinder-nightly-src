@@ -120,7 +120,11 @@ if (elFinder && elFinder.prototype && typeof(elFinder.prototype.i18) == 'object'
 			'cmdview'      : 'Zobrazit',
 			'cmdresize'    : 'Změnit velikost',
 			'cmdsort'      : 'Seřadit',
+<<<<<<< HEAD
 			'cmdnetmount'  : 'Mount network volume', // added 18.04.2012
+=======
+			'cmdnetmount'  : 'Připojit síťovou jednotku', // added 18.04.2012
+>>>>>>> e9fe57117b1dfc18f7bd7607a2abf61764caee0f
 
 			/*********************************** buttons ***********************************/
 			'btnClose'  : 'Zavřít',
@@ -130,7 +134,11 @@ if (elFinder && elFinder.prototype && typeof(elFinder.prototype.i18) == 'object'
 			'btnCancel' : 'Zrušit',
 			'btnNo'     : 'Ne',
 			'btnYes'    : 'Ano',
+<<<<<<< HEAD
 			'btnMount'  : 'Mount',  // added 18.04.2012
+=======
+			'btnMount'  : 'Připojit',  // added 18.04.2012
+>>>>>>> e9fe57117b1dfc18f7bd7607a2abf61764caee0f
 			
 			/******************************** notifications ********************************/
 			'ntfopen'     : 'Otevírání složky',
@@ -171,6 +179,7 @@ if (elFinder && elFinder.prototype && typeof(elFinder.prototype.i18) == 'object'
 			'msOct'       : 'Říj',
 			'msNov'       : 'Lis',
 			'msDec'       : 'Pro',
+<<<<<<< HEAD
 			'January'     : 'January',
 			'February'    : 'February',
 			'March'       : 'March',
@@ -197,6 +206,34 @@ if (elFinder && elFinder.prototype && typeof(elFinder.prototype.i18) == 'object'
 			'Thu'         : 'Thu', 
 			'Fri'         : 'Fri', 
 			'Sat'         : 'Sat',
+=======
+			'January'     : 'Leden',
+			'February'    : 'Únor',
+			'March'       : 'Březen',
+			'April'       : 'Duben',
+			'May'         : 'Květen',
+			'June'        : 'Červen',
+			'July'        : 'Červenec',
+			'August'      : 'Srpen',
+			'September'   : 'Září',
+			'October'     : 'Říjen',
+			'November'    : 'Listopad',
+			'December'    : 'Prosinec',
+			'Sunday'      : 'Neděle',
+			'Monday'      : 'Pondělí',
+			'Tuesday'     : 'Úterý',
+			'Wednesday'   : 'Středa',
+			'Thursday'    : 'Čtvrtek',
+			'Friday'      : 'Pátek',
+			'Saturday'    : 'Sobota',
+			'Sun'         : 'Ne',
+			'Mon'         : 'Po',
+			'Tue'         : 'Út',
+			'Wed'         : 'St',
+			'Thu'         : 'Čt',
+			'Fri'         : 'Pá',
+			'Sat'         : 'So',
+>>>>>>> e9fe57117b1dfc18f7bd7607a2abf61764caee0f
 
 			/******************************** sort variants ********************************/
 			'sortname'          : 'dle jména',
@@ -206,10 +243,17 @@ if (elFinder && elFinder.prototype && typeof(elFinder.prototype.i18) == 'object'
 			'sortFoldersFirst'  : 'Napřed složky',
 
 			/********************************** messages **********************************/
+<<<<<<< HEAD
 			'confirmReq'      : 'Požadováno potvržení',
 			'confirmRm'       : 'Opravdu chcete odstranit tyto soubory?<br/>Operace nelze vrátit!',
 			'confirmRepl'     : 'Nahradit staré soubory novými?',
 			'apllyAll'        : 'Všem',
+=======
+			'confirmReq'      : 'Požadováno potvrzení',
+			'confirmRm'       : 'Opravdu chcete odstranit tyto soubory?<br/>Operace nelze vrátit!',
+			'confirmRepl'     : 'Nahradit staré soubory novými?',
+			'apllyAll'        : 'Pro všechny',
+>>>>>>> e9fe57117b1dfc18f7bd7607a2abf61764caee0f
 			'name'            : 'Název',
 			'size'            : 'Velikost',
 			'perms'           : 'Práva',
@@ -217,7 +261,11 @@ if (elFinder && elFinder.prototype && typeof(elFinder.prototype.i18) == 'object'
 			'kind'            : 'Typ',
 			'read'            : 'čtení',
 			'write'           : 'zápis',
+<<<<<<< HEAD
 			'noaccess'        : 'přístup nepovolen',
+=======
+			'noaccess'        : 'přístup odepřen',
+>>>>>>> e9fe57117b1dfc18f7bd7607a2abf61764caee0f
 			'and'             : 'a',
 			'unknown'         : 'neznámý',
 			'selectall'       : 'Vybrat všechny soubory',
@@ -241,7 +289,11 @@ if (elFinder && elFinder.prototype && typeof(elFinder.prototype.i18) == 'object'
 			'searcresult'     : 'Výsledky hledání',
 			'selected'        : 'vybrané položky',
 			'about'           : 'O softwaru',
+<<<<<<< HEAD
 			'shortcuts'       : 'Zástupci',
+=======
+			'shortcuts'       : 'Zkratky',
+>>>>>>> e9fe57117b1dfc18f7bd7607a2abf61764caee0f
 			'help'            : 'Nápověda',
 			'webfm'           : 'Webový správce souborů',
 			'ver'             : 'Verze',
@@ -259,19 +311,32 @@ if (elFinder && elFinder.prototype && typeof(elFinder.prototype.i18) == 'object'
 			'translator'      : 'překlad',
 			'icons'           : 'Ikony',
 			'dontforget'      : 'a nezapomeňte si vzít plavky',
+<<<<<<< HEAD
 			'shortcutsof'     : 'Zástupci nejsou povoleni',
 			'dropFiles'       : 'Přetáhněte soubory sem',
 			'or'              : 'nebo',
 			'selectForUpload' : 'Vyberte soubory',
 			'moveFiles'       : 'Přesunout sobory',
 			'copyFiles'       : 'Zkupírovat soubory',
+=======
+			'shortcutsof'     : 'Zkratky nejsou povoleny',
+			'dropFiles'       : 'Sem přetáhněte soubory',
+			'or'              : 'nebo',
+			'selectForUpload' : 'Vyberte soubory',
+			'moveFiles'       : 'Přesunout sobory',
+			'copyFiles'       : 'Zkopírovat soubory',
+>>>>>>> e9fe57117b1dfc18f7bd7607a2abf61764caee0f
 			'rmFromPlaces'    : 'Odstranit z míst',
 			'aspectRatio'     : 'Poměr stran',
 			'scale'           : 'Měřítko',
 			'width'           : 'Šířka',
 			'height'          : 'Výška',
 			'resize'          : 'Změnit vel.',
+<<<<<<< HEAD
 			'crop'            : 'Ožezat',
+=======
+			'crop'            : 'Ořezat',
+>>>>>>> e9fe57117b1dfc18f7bd7607a2abf61764caee0f
 			'rotate'          : 'Otočit',
 			'rotate-cw'       : 'Otočit o +90 stupňů',
 			'rotate-ccw'      : 'Otočit o -90 stupňů',
