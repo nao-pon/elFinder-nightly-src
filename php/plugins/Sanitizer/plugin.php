@@ -7,7 +7,7 @@
  * ex. binding, configure on connector options
  *	$opts = array(
  *		'bind' => array(
- *			'upload.pre mkdir.pre mkfile.pre rename.pre archive.pre' => array(
+ *			'mkdir.pre mkfile.pre rename.pre' => array(
  *				'Plugin.Sanitizer.cmdPreprocess'
  *			),
  *			'upload.presave' => array(
@@ -64,13 +64,7 @@ class elFinderPluginSanitizer
 		}
 	
 		if (isset($args['name'])) {
-			if (is_array($args['name'])) {
-				foreach($args['name'] as $i => $name) {
-					$args['name'][$i] = $this->sanitizeFileName($name, $opts);
-				}
-			} else {
-				$args['name'] = $this->sanitizeFileName($args['name'], $opts);
-			}
+			$args['name'] = $this->sanitizeFileName($args['name'], $opts);
 		}
 		return true;
 	}
