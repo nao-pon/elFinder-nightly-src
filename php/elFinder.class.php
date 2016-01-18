@@ -2222,10 +2222,7 @@ class elFinder {
 			foreach ($args['targets'] as $hash) {
 				if (($volume = $this->volume($hash)) != false
 				&& ($info = $volume->file($hash)) != false) {
-<<<<<<< HEAD
-=======
 					$info['path'] = $volume->path($hash);
->>>>>>> dda1f3ca47436280777140512fbdad8ea4328b10
 					$files[] = $info;
 				}
 			}
