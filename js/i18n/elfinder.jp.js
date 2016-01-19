@@ -2,11 +2,7 @@
  * Japanese translation
  * @author Tomoaki Yoshida <info@yoshida-studio.jp>
  * @author Naoki Sawada <hypweb@gmail.com>
-<<<<<<< HEAD
- * @version 2016-01-13
-=======
  * @version 2016-01-18
->>>>>>> 3e7fcd898f646925d860177b7f3ba67fa497c421
  */
 if (elFinder && elFinder.prototype && typeof(elFinder.prototype.i18) == 'object') {
 	elFinder.prototype.i18.jp = {
@@ -337,10 +333,7 @@ if (elFinder && elFinder.prototype && typeof(elFinder.prototype.i18) == 'object'
 			'emptyFolderLTap' : '空のフォルダ\\Aアイテムを追加するにはここをロングタップ', // from v2.1.6 added 30.12.2015
 			'quality'         : '品質', // from v2.1.6 added 5.1.2016
 			'autoSync'        : '自動更新',  // from v2.1.6 added 10.1.2016
-<<<<<<< HEAD
-=======
 			'moveUp'          : '上へ移動',  // from v2.1.6 added 18.1.2016
->>>>>>> 3e7fcd898f646925d860177b7f3ba67fa497c421
 
 			/********************************** mimetypes **********************************/
 			'kindUnknown'     : '不明',

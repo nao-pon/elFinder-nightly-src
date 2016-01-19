@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 2016-01-xx
+=======
+2016-01-19  Naoki Sawada  <hypweb@gmail.com>
+>>>>>>> ad3e3ec46f06220eaefb3824c5ca83c1fef6edc1
 
 	* elFinder (2.1.6):
 		- Fixed #1074 startPath for multi volumes
@@ -14,6 +18,10 @@
 		- Adddd new volume root option `searchTimeout` (default 30s)
 		- Added new crient command `opendir` - opens selected item's parent folder at search result
 		- Sortable "Places" (your favorites)
+<<<<<<< HEAD
+=======
+		- Fixed #1193 open the file at direct URL if possible
+>>>>>>> ad3e3ec46f06220eaefb3824c5ca83c1fef6edc1
 		- And some minor bug fixes
 
 
