@@ -64,6 +64,16 @@ class elFinder {
 	protected static $base64encodeSessionData = false;
 	
 	/**
+<<<<<<< HEAD
+=======
+	 * elFinder common tempraly path
+	 *
+	 * @var string
+	 **/
+	protected static $commonTempPath = '';
+	
+	/**
+>>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 	 * Session key of net mount volumes
 	 * @var string
 	 */
@@ -96,6 +106,10 @@ class elFinder {
 		'parents'   => array('target' => true),
 		'tmb'       => array('targets' => true),
 		'file'      => array('target' => true, 'download' => false),
+<<<<<<< HEAD
+=======
+		'zipdl'     => array('targets' => true, 'download' => false),
+>>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 		'size'      => array('targets' => true),
 		'mkdir'     => array('target' => true, 'name' => true),
 		'mkfile'    => array('target' => true, 'name' => true, 'mimes' => false),
@@ -180,6 +194,16 @@ class elFinder {
 	protected $uploadTempPath = '';
 	
 	/**
+<<<<<<< HEAD
+=======
+	 * Max allowed archive files size (0 - no limit)
+	 * 
+	 * @var integer
+	 */
+	protected $maxArcFilesSize = 0;
+	
+	/**
+>>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 	 * undocumented class variable
 	 *
 	 * @var string
@@ -296,6 +320,14 @@ class elFinder {
 		$this->netVolumesSessionKey = !empty($opts['netVolumesSessionKey'])? $opts['netVolumesSessionKey'] : 'elFinderNetVolumes';
 		$this->callbackWindowURL = (isset($opts['callbackWindowURL']) ? $opts['callbackWindowURL'] : '');
 		self::$sessionCacheKey = !empty($opts['sessionCacheKey']) ? $opts['sessionCacheKey'] : 'elFinderCaches';
+<<<<<<< HEAD
+=======
+		elFinder::$commonTempPath = (isset($opts['commonTempPath']) ? $opts['commonTempPath'] : './.tmp');
+		if (!is_writable(elFinder::$commonTempPath)) {
+			elFinder::$commonTempPath = '';
+		}
+		$this->maxArcFilesSize = isset($opts['maxArcFilesSize'])? intval($opts['maxArcFilesSize']) : 0;
+>>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 		
 		// check session cache
 		$_optsMD5 = md5(json_encode($opts['roots']));
@@ -362,6 +394,12 @@ class elFinder {
 				$volume = new $class();
 
 				try {
+<<<<<<< HEAD
+=======
+					if ($this->maxArcFilesSize && (empty($o['maxArcFilesSize']) || $this->maxArcFilesSize < $o['maxArcFilesSize'])) {
+						$o['maxArcFilesSize'] = $this->maxArcFilesSize;
+					}
+>>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 					if ($volume->mount($o)) {
 						// unique volume id (ends on "_") - used as prefix to files hash
 						$id = $volume->id();
@@ -668,7 +706,14 @@ class elFinder {
 	 * @author Dmitry (dio) Levashov
 	 */
 	protected function saveNetVolumes($volumes) {
+<<<<<<< HEAD
 		$_SESSION[$this->netVolumesSessionKey] = elFinder::sessionDataEncode($volumes);
+=======
+		// try session restart
+		@session_start();
+		$_SESSION[$this->netVolumesSessionKey] = elFinder::sessionDataEncode($volumes);
+		elFinder::sessionWrite();
+>>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 	}
 
 	/**
@@ -807,7 +852,10 @@ class elFinder {
 			$this->removeNetVolume($volume);
 			return array('error' => $this->error(self::ERROR_NETMOUNT, $args['host'], implode(' ', $volume->error())));
 		}
+<<<<<<< HEAD
 
+=======
+>>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 	}
 
 	/**
@@ -997,6 +1045,94 @@ class elFinder {
 	}
 	
 	/**
+<<<<<<< HEAD
+=======
+	 * Download files/folders as an archive file
+	 * 
+	 * 1st: Return srrsy contains download archive file info
+	 * 2nd: Return array contains opened file pointer, root itself and required headers
+	 *
+	 * @param  array  command arguments
+	 * @return array
+	 * @author Naoki Sawada
+	 **/
+	protected function zipdl($args) {
+		$targets = $args['targets'];
+		$download = !empty($args['download']);
+		$h404    = 'HTTP/1.x 404 Not Found';
+		
+		if (!$download) {
+			//1st: Return srrsy contains download archive file info
+			$error = array(self::ERROR_ARCHIVE);
+			if (($volume = $this->volume($targets[0])) !== false) {
+				if ($dlres = $volume->zipdl($targets)) {
+					$path = $dlres['path'];
+					register_shutdown_function(create_function('$f', 'connection_status() && is_file($f) && @unlink($f);'), $path);
+					if (count($targets) === 1) {
+						$name = basename($volume->path($targets[0]));
+					} else {
+						$name = $dlres['prefix'].'_Files';
+					}
+					$name .= '.'.$dlres['ext'];
+					$result = array(
+						'zipdl' => array(
+							'file' => basename($path),
+							'name' => $name,
+							'mime' => $dlres['mime']
+						)
+					);
+					return $result;
+				}
+				$error = array_merge($error, $volume->error());
+			}
+			return array('error' => $error);
+		} else {
+			// 2nd: Return array contains opened file pointer, root itself and required headers
+			if (count($targets) !== 4 || ($volume = $this->volume($targets[0])) == false) {
+				return array('error' => 'File not found', 'header' => $h404, 'raw' => true);
+			}
+			$file = $targets[1];
+			$path = $volume->getTempPath().DIRECTORY_SEPARATOR.$file;
+			register_shutdown_function(create_function('$f', 'is_file($f) && @unlink($f);'), $path);
+			if (!is_readable($path)) {
+				return array('error' => 'File not found', 'header' => $h404, 'raw' => true);
+			}
+			$name = $targets[2];
+			$mime = $targets[3];
+			
+			$filenameEncoded = rawurlencode($name);
+			if (strpos($filenameEncoded, '%') === false) { // ASCII only
+				$filename = 'filename="'.$name.'"';
+			} else {
+				$ua = $_SERVER['HTTP_USER_AGENT'];
+				if (preg_match('/MSIE [4-8]/', $ua)) { // IE < 9 do not support RFC 6266 (RFC 2231/RFC 5987)
+					$filename = 'filename="'.$filenameEncoded.'"';
+				} elseif (strpos($ua, 'Chrome') === false && strpos($ua, 'Safari') !== false && preg_match('#Version/[3-5]#', $ua)) { // Safari < 6
+					$filename = 'filename="'.str_replace('"', '', $name).'"';
+				} else { // RFC 6266 (RFC 2231/RFC 5987)
+					$filename = 'filename*=UTF-8\'\''.$filenameEncoded;
+				}
+			}
+			
+			$fp = fopen($path, 'rb');
+			$file = fstat($fp);
+			$result = array(
+				'pointer' => $fp,
+				'header'  => array(
+					'Content-Type: '.$mime, 
+					'Content-Disposition: attachment; '.$filename,
+					'Content-Transfer-Encoding: binary',
+					'Content-Length: '.$file['size'],
+					'Accept-Ranges: none',
+					'Connection: close'
+				)
+			);
+			return $result;
+		}
+	}
+	
+	/**
+>>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 	 * Required to output file in browser when volume URL is not set 
 	 * Return array contains opened file pointer, root itself and required headers
 	 *
@@ -2564,4 +2700,18 @@ class elFinder {
 			session_write_close();
 		}
 	}
+<<<<<<< HEAD
+=======
+	
+	/**
+	 * Retuen elFinder static variable
+	 * 
+	 * @return void
+	 */
+	public static function getStaticVar($key) {
+		return isset(elFinder::$$key)? elFinder::$$key : null;
+	}
+	
+
+>>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 } // END class

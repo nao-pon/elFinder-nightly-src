@@ -2,7 +2,11 @@
  * Japanese translation
  * @author Tomoaki Yoshida <info@yoshida-studio.jp>
  * @author Naoki Sawada <hypweb@gmail.com>
+<<<<<<< HEAD
  * @version 2016-01-18
+=======
+ * @version 2016-01-23
+>>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
  */
 if (elFinder && elFinder.prototype && typeof(elFinder.prototype.i18) == 'object') {
 	elFinder.prototype.i18.jp = {
@@ -180,6 +184,10 @@ if (elFinder && elFinder.prototype && typeof(elFinder.prototype.i18) == 'object'
 			'ntfurl'      : 'リンクURLを取得しています', // from v2.1 added 11.03.2014
 			'ntfchmod'    : 'ファイル属性を変更しています', // from v2.1 added 20.6.2015
 			'ntfpreupload': 'アップロードファイル名を検証しています', // from v2.1 added 31.11.2015
+<<<<<<< HEAD
+=======
+			'ntfzipdl'    : 'ダウンロード用ファイルを作成しています', // from v2.1.7 added 23.1.2016
+>>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 
 			/************************************ dates **********************************/
 			'dateUnknown' : '不明',

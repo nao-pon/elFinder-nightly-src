@@ -1,8 +1,17 @@
 <<<<<<< HEAD
-2016-01-xx
 =======
+2016-0x-xx  
+
+	* elFinder (2.1.7):
+		- Added connector main options `commonTempPath` and `maxArcFilesSize`
+		- Fixed #353 It can download files/folders as an archve file
+		- Fixed #1195 Supported BMP in GD image resize
+		- Became possible to cancellation while searching
+		- And some minor bug fixes
+
+
+>>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 2016-01-19  Naoki Sawada  <hypweb@gmail.com>
->>>>>>> ad3e3ec46f06220eaefb3824c5ca83c1fef6edc1
 
 	* elFinder (2.1.6):
 		- Fixed #1074 startPath for multi volumes
@@ -18,10 +27,7 @@
 		- Adddd new volume root option `searchTimeout` (default 30s)
 		- Added new crient command `opendir` - opens selected item's parent folder at search result
 		- Sortable "Places" (your favorites)
-<<<<<<< HEAD
-=======
 		- Fixed #1193 open the file at direct URL if possible
->>>>>>> ad3e3ec46f06220eaefb3824c5ca83c1fef6edc1
 		- And some minor bug fixes
 
 
