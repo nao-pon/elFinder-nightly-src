@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.0.5 (2.0_n-src Nightly: 607c3e1) (2016-01-19)
+ * Version 2.0.5 (2.0_n-src Nightly: 18722bc) (2016-01-29)
  * http://elfinder.org
  * 
  * Copyright 2009-2016, Studio 42
@@ -1249,7 +1249,7 @@ window.elFinder = function(node, opts) {
 	 */
 	this.unbind = function(event, callback) {
 		var l = listeners[('' + event).toLowerCase()] || [],
-			i = l.indexOf(callback);
+			i = $.inArray(callback, l);
 
 		i > -1 && l.splice(i, 1);
 		//delete callback; // need this?
@@ -3311,7 +3311,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.0.5 (2.0_n-src Nightly: 607c3e1)';
+elFinder.prototype.version = '2.0.5 (2.0_n-src Nightly: 18722bc)';
 
 
 
