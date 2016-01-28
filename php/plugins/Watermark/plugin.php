@@ -114,14 +114,6 @@ class elFinderPluginWatermark {
 
 		// check target image type
 		$imgTypes = array(
-<<<<<<< HEAD
-			IMAGETYPE_GIF => IMG_GIF,
-			IMAGETYPE_JPEG => IMG_JPEG,
-			IMAGETYPE_PNG => IMG_PNG,
-			IMAGETYPE_WBMP => IMG_WBMP,
-		);
-		if (! ($opts['targetType'] & $imgTypes[$srcImgInfo[2]])) {
-=======
 			IMAGETYPE_GIF  => IMG_GIF,
 			IMAGETYPE_JPEG => IMG_JPEG,
 			IMAGETYPE_PNG  => IMG_PNG,
@@ -129,7 +121,6 @@ class elFinderPluginWatermark {
 			IMAGETYPE_WBMP => IMG_WBMP
 		);
 		if (! ($opts['targetType'] & @$imgTypes[$srcImgInfo[2]])) {
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 			return false;
 		}
 		

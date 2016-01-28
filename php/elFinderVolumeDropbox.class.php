@@ -112,13 +112,8 @@ class elFinderVolumeDropbox extends elFinderVolumeDriver {
 			'PDO_Options'       => array(),
 			'PDO_DBName'        => 'dropbox',
 			'treeDeep'          => 0,
-<<<<<<< HEAD
-			'tmbPath'           => '../files/.tmb',
-			'tmbURL'            => 'files/.tmb',
-=======
 			'tmbPath'           => '',
 			'tmbURL'            => '',
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 			'tmpPath'           => '',
 			'getTmbSize'        => 'large', // small: 32x32, medium or s: 64x64, large or m: 128x128, l: 640x480, xl: 1024x768
 			'metaCachePath'     => '',
@@ -370,12 +365,9 @@ class elFinderVolumeDropbox extends elFinderVolumeDriver {
 		if (!$this->tmp && is_writable($this->options['tmbPath'])) {
 			$this->tmp = $this->options['tmbPath'];
 		}
-<<<<<<< HEAD
-=======
 		if (!$this->tmp && ($tmp = elFinder::getStaticVar('commonTempPath'))) {
 			$this->tmp = $tmp;
 		}
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 		
 		if (!empty($this->options['metaCachePath'])) {
 			if ((is_dir($this->options['metaCachePath']) || @mkdir($this->options['metaCachePath'])) && is_writable($this->options['metaCachePath'])) {
@@ -386,14 +378,6 @@ class elFinderVolumeDropbox extends elFinderVolumeDriver {
 			$this->metaCache = $this->tmp;
 		}
 		
-<<<<<<< HEAD
-		if (!$this->tmp) {
-			$this->disabled[] = 'archive';
-			$this->disabled[] = 'extract';
-		}
-		
-=======
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 		if (!$this->metaCache) {
 			return $this->setError('Cache dirctory (metaCachePath or tmp) is require.');
 		}
@@ -447,15 +431,8 @@ class elFinderVolumeDropbox extends elFinderVolumeDriver {
 	protected function configure() {
 		parent::configure();
 		
-<<<<<<< HEAD
-		if (!$this->tmp) {
-			$this->disabled[] = 'archive';
-			$this->disabled[] = 'extract';
-		}
-=======
 		$this->disabled[] = 'archive';
 		$this->disabled[] = 'extract';
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 	}
 	
 	/**
@@ -620,11 +597,7 @@ class elFinderVolumeDropbox extends elFinderVolumeDriver {
 						$praw['client_mtime'] = date('r', $_t);
 						$_update = true;
 					}
-<<<<<<< HEAD
-					if ($_t > strtotime($praw['modified'])) {
-=======
 					if (isset($praw['modified']) && $_t > strtotime($praw['modified'])) {
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 						$praw['modified'] = date('r', $_t);
 						$_update = true;
 					}

@@ -44,21 +44,15 @@ class elFinderVolumeS3 extends elFinderVolumeDriver {
 	
 	protected function configure() {
 		parent::configure();
-<<<<<<< HEAD
-=======
 		$this->tmpPath = '';
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 		if (!empty($this->options['tmpPath'])) {
 			if ((is_dir($this->options['tmpPath']) || @mkdir($this->options['tmpPath'])) && is_writable($this->options['tmpPath'])) {
 				$this->tmpPath = $this->options['tmpPath'];
 			}
 		}
-<<<<<<< HEAD
-=======
 		if (!$this->tmpPath && ($tmp = elFinder::getStaticVar('commonTempPath'))) {
 			$this->tmpPath = $tmp;
 		}
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 		$this->mimeDetect = 'internal';
 	}
 	

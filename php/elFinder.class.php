@@ -64,8 +64,6 @@ class elFinder {
 	protected static $base64encodeSessionData = false;
 	
 	/**
-<<<<<<< HEAD
-=======
 	 * elFinder common tempraly path
 	 *
 	 * @var string
@@ -73,7 +71,6 @@ class elFinder {
 	protected static $commonTempPath = '';
 	
 	/**
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 	 * Session key of net mount volumes
 	 * @var string
 	 */
@@ -106,10 +103,7 @@ class elFinder {
 		'parents'   => array('target' => true),
 		'tmb'       => array('targets' => true),
 		'file'      => array('target' => true, 'download' => false),
-<<<<<<< HEAD
-=======
 		'zipdl'     => array('targets' => true, 'download' => false),
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 		'size'      => array('targets' => true),
 		'mkdir'     => array('target' => true, 'name' => true),
 		'mkfile'    => array('target' => true, 'name' => true, 'mimes' => false),
@@ -194,8 +188,6 @@ class elFinder {
 	protected $uploadTempPath = '';
 	
 	/**
-<<<<<<< HEAD
-=======
 	 * Max allowed archive files size (0 - no limit)
 	 * 
 	 * @var integer
@@ -203,7 +195,6 @@ class elFinder {
 	protected $maxArcFilesSize = 0;
 	
 	/**
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 	 * undocumented class variable
 	 *
 	 * @var string
@@ -320,14 +311,11 @@ class elFinder {
 		$this->netVolumesSessionKey = !empty($opts['netVolumesSessionKey'])? $opts['netVolumesSessionKey'] : 'elFinderNetVolumes';
 		$this->callbackWindowURL = (isset($opts['callbackWindowURL']) ? $opts['callbackWindowURL'] : '');
 		self::$sessionCacheKey = !empty($opts['sessionCacheKey']) ? $opts['sessionCacheKey'] : 'elFinderCaches';
-<<<<<<< HEAD
-=======
 		elFinder::$commonTempPath = (isset($opts['commonTempPath']) ? $opts['commonTempPath'] : './.tmp');
 		if (!is_writable(elFinder::$commonTempPath)) {
 			elFinder::$commonTempPath = '';
 		}
 		$this->maxArcFilesSize = isset($opts['maxArcFilesSize'])? intval($opts['maxArcFilesSize']) : 0;
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 		
 		// check session cache
 		$_optsMD5 = md5(json_encode($opts['roots']));
@@ -394,12 +382,9 @@ class elFinder {
 				$volume = new $class();
 
 				try {
-<<<<<<< HEAD
-=======
 					if ($this->maxArcFilesSize && (empty($o['maxArcFilesSize']) || $this->maxArcFilesSize < $o['maxArcFilesSize'])) {
 						$o['maxArcFilesSize'] = $this->maxArcFilesSize;
 					}
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 					if ($volume->mount($o)) {
 						// unique volume id (ends on "_") - used as prefix to files hash
 						$id = $volume->id();
@@ -706,14 +691,10 @@ class elFinder {
 	 * @author Dmitry (dio) Levashov
 	 */
 	protected function saveNetVolumes($volumes) {
-<<<<<<< HEAD
-		$_SESSION[$this->netVolumesSessionKey] = elFinder::sessionDataEncode($volumes);
-=======
 		// try session restart
 		@session_start();
 		$_SESSION[$this->netVolumesSessionKey] = elFinder::sessionDataEncode($volumes);
 		elFinder::sessionWrite();
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 	}
 
 	/**
@@ -852,10 +833,6 @@ class elFinder {
 			$this->removeNetVolume($volume);
 			return array('error' => $this->error(self::ERROR_NETMOUNT, $args['host'], implode(' ', $volume->error())));
 		}
-<<<<<<< HEAD
-
-=======
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 	}
 
 	/**
@@ -1045,8 +1022,6 @@ class elFinder {
 	}
 	
 	/**
-<<<<<<< HEAD
-=======
 	 * Download files/folders as an archive file
 	 * 
 	 * 1st: Return srrsy contains download archive file info
@@ -1132,7 +1107,6 @@ class elFinder {
 	}
 	
 	/**
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 	 * Required to output file in browser when volume URL is not set 
 	 * Return array contains opened file pointer, root itself and required headers
 	 *
@@ -2700,8 +2674,6 @@ class elFinder {
 			session_write_close();
 		}
 	}
-<<<<<<< HEAD
-=======
 	
 	/**
 	 * Retuen elFinder static variable
@@ -2713,5 +2685,4 @@ class elFinder {
 	}
 	
 
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 } // END class

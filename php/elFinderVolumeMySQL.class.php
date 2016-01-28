@@ -144,12 +144,9 @@ class elFinderVolumeMySQL extends elFinderVolumeDriver {
 			
 			$this->tmpPath = is_dir($tmp) && is_writable($tmp) ? $tmp : false;
 		}
-<<<<<<< HEAD
-=======
 		if (!$this->tmpPath && ($tmp = elFinder::getStaticVar('commonTempPath'))) {
 			$this->tmpPath = $tmp;
 		}
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 		
 		if (!$this->tmpPath && $this->tmbPath && $this->tmbPathWritable) {
 			$this->tmpPath = $this->tmbPath;
@@ -405,11 +402,7 @@ class elFinderVolumeMySQL extends elFinderVolumeDriver {
 	 * @author Dmitry (dio) Levashov
 	 **/
 	protected function _dirname($path) {
-<<<<<<< HEAD
-		return ($stat = $this->stat($path)) ? ($stat['phash'] ? $this->decode($stat['phash']) : $this->root) : false;
-=======
 		return ($stat = $this->stat($path)) ? (!empty($stat['phash']) ? $this->decode($stat['phash']) : $this->root) : false;
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 	}
 
 	/**
@@ -492,11 +485,7 @@ class elFinderVolumeMySQL extends elFinderVolumeDriver {
 			$dir = $this->stat($id);
 			$path .= $dir['name'].$this->separator;
 		}
-<<<<<<< HEAD
-		return $this->rootName.$this->separator.$path.$file['name'];
-=======
 		return $path.$file['name'];
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 	}
 	
 	/**

@@ -272,11 +272,8 @@ abstract class elFinderVolumeDriver {
 		),
 		// files attributes
 		'attributes'   => array(),
-<<<<<<< HEAD
-=======
 		// max allowed archive files size (0 - no limit)
 		'maxArcFilesSize' => 0,
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 		// Allowed archive's mimetypes to create. Leave empty for all available types.
 		'archiveMimes' => array(),
 		// Manual config for archivers. See example below. Leave empty for auto detect
@@ -638,8 +635,6 @@ abstract class elFinderVolumeDriver {
 			$this->imgLib = function_exists('gd_info') ? 'gd' : '';
 		}
 		
-<<<<<<< HEAD
-=======
 		// check archivers
 		if (empty($this->archivers['create'])) {
 			$this->disabled[] ='archive';
@@ -652,7 +647,6 @@ abstract class elFinderVolumeDriver {
 			$this->disabled[] ='zipdl';
 		}
 		
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 		// check 'statOwner' for command `chmod`
 		if (empty($this->options['statOwner'])) {
 			$this->disabled[] ='chmod';
@@ -1045,12 +1039,9 @@ abstract class elFinderVolumeDriver {
 
 		$this->configure();
 		
-<<<<<<< HEAD
-=======
 		// Normarize disabled (array_merge`for type array of JSON)
 		$this->disabled = array_merge(array_unique($this->disabled));
 		
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 		// fix sync interval
 		if ($this->options['syncMinMs'] !== 0) {
 			$this->options['syncMinMs'] = max($this->options[$this->options['syncChkAsTs']? 'tsPlSleep' : 'lsPlSleep'] * 1000, intval($this->options['syncMinMs']));
@@ -1166,11 +1157,7 @@ abstract class elFinderVolumeDriver {
 			'path'            => $this->path($hash),
 			'url'             => $this->URL,
 			'tmbUrl'          => $this->tmbURL,
-<<<<<<< HEAD
-			'disabled'        => array_merge(array_unique($this->disabled)), // `array_merge` for type array of JSON
-=======
 			'disabled'        => $this->disabled,
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 			'separator'       => $this->separator,
 			'copyOverwrite'   => intval($this->options['copyOverwrite']),
 			'uploadOverwrite' => intval($this->options['uploadOverwrite']),
@@ -1334,24 +1321,12 @@ abstract class elFinderVolumeDriver {
 	 **/
 	public function file($hash) {
 		$path = $this->decode($hash);
-<<<<<<< HEAD
-		$isRoot = ($path === $this->root);
-=======
 		$isRoot = ($path == $this->root);
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 		
 		$file = $this->stat($path);
 		
 		if ($isRoot) {
-<<<<<<< HEAD
-			$file['uiCmdMap'] = (isset($this->options['uiCmdMap']) && is_array($this->options['uiCmdMap']))? $this->options['uiCmdMap'] : array();
-			$file['disabled'] = array_merge(array_unique($this->disabled)); // `array_merge` for type array of JSON
-			if (isset($this->options['netkey'])) {
-				$file['netkey'] = $this->options['netkey'];
-			}
-=======
 			$file = array_merge($file, $this->getRootStatExtra());
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 		}
 		
 		return ($file) ? $file : $this->setError(elFinder::ERROR_FILE_NOT_FOUND);
@@ -1459,12 +1434,7 @@ abstract class elFinderVolumeDriver {
 		
 		while ($path && $path != $this->root) {
 			$path = $this->dirnameCE($path);
-<<<<<<< HEAD
-			$stat = $this->stat($path);
-			if (!empty($stat['hidden']) || !$stat['read']) {
-=======
 			if (!($stat = $this->stat($path)) || !empty($stat['hidden']) || !$stat['read']) {
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 				return false;
 			}
 			
@@ -1880,8 +1850,6 @@ abstract class elFinderVolumeDriver {
 	}
 	
 	/**
-<<<<<<< HEAD
-=======
 	 * Return path to archive of target items
 	 * 
 	 * @param  array  $hashes
@@ -1957,7 +1925,6 @@ abstract class elFinderVolumeDriver {
 	}
 	
 	/**
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 	 * Return file contents
 	 *
 	 * @param  string  $hash  file hash
@@ -2859,8 +2826,6 @@ abstract class elFinderVolumeDriver {
 		return $this->_rmdir($localpath);
 	}
 	
-<<<<<<< HEAD
-=======
 	/**
 	 * Copy items to a new temporary directory on the local server
 	 * 
@@ -2935,7 +2900,6 @@ abstract class elFinderVolumeDriver {
 		return $res? $dir : false;
 	}
 	
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 	/*********************** file stat *********************/
 	
 	/**
@@ -3078,8 +3042,6 @@ abstract class elFinderVolumeDriver {
 	}
 	
 	/**
-<<<<<<< HEAD
-=======
 	 * Get root stat extra key values
 	 * 
 	 * @return array stat extras
@@ -3108,7 +3070,6 @@ abstract class elFinderVolumeDriver {
 	}
 	
 	/**
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 	 * Put file stat in cache and return it
 	 *
 	 * @param  string  $path   file path
@@ -3127,19 +3088,7 @@ abstract class elFinderVolumeDriver {
 		$parent = '';
 		
 		if ($root) {
-<<<<<<< HEAD
-			if ($this->rootName) {
-				$stat['name'] = $this->rootName;
-			}
-			if (! empty($this->options['icon'])) {
-				$stat['icon'] = $this->options['icon'];
-			}
-			if (! empty($this->options['rootCssClass'])) {
-				$stat['csscls'] = $this->options['rootCssClass'];
-			}
-=======
 			$stat = array_merge($stat, $this->getRootStatExtra());
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 		} else {
 			if (!isset($stat['name']) || $stat['name'] === '') {
 				$stat['name'] = $this->basenameCE($path);
@@ -3851,11 +3800,7 @@ abstract class elFinderVolumeDriver {
 			&& (!$this->tmbPath || strpos($path, $this->tmbPath) === false) // do not create thumnbnail for thumnbnail
 			&& $this->imgLib 
 			&& strpos($stat['mime'], 'image') === 0 
-<<<<<<< HEAD
-			&& ($this->imgLib == 'gd' ? $stat['mime'] == 'image/jpeg' || $stat['mime'] == 'image/png' || $stat['mime'] == 'image/gif' : true);
-=======
 			&& ($this->imgLib == 'gd' ? in_array($stat['mime'], array('image/jpeg', 'image/png', 'image/gif', 'image/x-ms-bmp')) : true);
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 	}
 	
 	/**
@@ -4423,18 +4368,6 @@ abstract class elFinderVolumeDriver {
 	protected function gdImageCreate($path,$mime){
 		switch($mime){
 			case 'image/jpeg':
-<<<<<<< HEAD
-			return imagecreatefromjpeg($path);
-
-			case 'image/png':
-			return imagecreatefrompng($path);
-
-			case 'image/gif':
-			return imagecreatefromgif($path);
-
-			case 'image/xbm':
-			return imagecreatefromxbm($path);
-=======
 			return @imagecreatefromjpeg($path);
 
 			case 'image/png':
@@ -4454,7 +4387,6 @@ abstract class elFinderVolumeDriver {
 			
 			case 'image/xpm':
 			return @imagecreatefromxpm($path);
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 		}
 		return false;
 	}

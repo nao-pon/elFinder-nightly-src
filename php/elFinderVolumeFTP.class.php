@@ -103,10 +103,6 @@ class elFinderVolumeFTP extends elFinderVolumeDriver {
 		);
 		$this->options = array_merge($this->options, $opts); 
 		$this->options['mimeDetect'] = 'internal';
-<<<<<<< HEAD
-		$this->options['maxArcFilesSize'] = 0;     // max allowed archive files size (0 - no limit)
-=======
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 	}
 	
 	/**
@@ -204,12 +200,9 @@ class elFinderVolumeFTP extends elFinderVolumeDriver {
 				$this->tmp = $this->options['tmpPath'];
 			}
 		}
-<<<<<<< HEAD
-=======
 		if (!$this->tmp && ($tmp = elFinder::getStaticVar('commonTempPath'))) {
 			$this->tmp = $tmp;
 		}
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 		
 		if (!$this->tmp && $this->tmbPath) {
 			$this->tmp = $this->tmbPath;
@@ -236,17 +229,10 @@ class elFinderVolumeFTP extends elFinderVolumeDriver {
 	 * @author Dmitry (dio) Levashov
 	 **/
 	protected function connect() {
-<<<<<<< HEAD
-		if (!($this->connect = ftp_connect($this->options['host'], $this->options['port'], $this->options['timeout']))) {
-			return $this->setError('Unable to connect to FTP server '.$this->options['host']);
-		}
-		if (!ftp_login($this->connect, $this->options['user'], $this->options['pass'])) {
-=======
 		if (!($this->connect = @ftp_connect($this->options['host'], $this->options['port'], $this->options['timeout']))) {
 			return $this->setError('Unable to connect to FTP server '.$this->options['host']);
 		}
 		if (!@ftp_login($this->connect, $this->options['user'], $this->options['pass'])) {
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 			$this->umount();
 			return $this->setError('Unable to login into '.$this->options['host']);
 		}
@@ -264,13 +250,8 @@ class elFinderVolumeFTP extends elFinderVolumeDriver {
 		ftp_pasv($this->connect, $this->options['mode'] == 'passive');
 
 		// enter root folder
-<<<<<<< HEAD
-		if (!ftp_chdir($this->connect, $this->root) 
-		|| $this->root != ftp_pwd($this->connect)) {
-=======
 		if (! @ftp_chdir($this->connect, $this->root) 
 		|| $this->root != @ftp_pwd($this->connect)) {
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 			$this->umount();
 			return $this->setError('Unable to open root folder.');
 		}
@@ -689,20 +670,12 @@ class elFinderVolumeFTP extends elFinderVolumeDriver {
 			$this->convEncIn();
 		}
 		if (!$this->MLSTsupprt) {
-<<<<<<< HEAD
-			//if ($path == $this->root && (empty($this->ARGS['reload']) || !isset($this->ARGS['target']) || strpos($this->ARGS['target'], $this->id) !== 0)) {
-			if ($path == $this->root && ! $this->isMyReload()) {
-				return array(
-=======
 			if ($path == $this->root && ($path === $this->systemRoot || ! $this->isMyReload())) {
 				$res = array(
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 					'name' => $this->root,
 					'mime' => 'directory',
 					'dirs' => $this->_subdirs($path)
 				);
-<<<<<<< HEAD
-=======
 				if ($this->isMyReload()) {
 				 	$ts = 0;
 					foreach (ftp_rawlist($this->connect, $path) as $str) {
@@ -715,7 +688,6 @@ class elFinderVolumeFTP extends elFinderVolumeDriver {
 					}
 				}
 				return $res;
->>>>>>> 62e73c4857e7fc7ceccbe01d1e822109840ae0a1
 			}
 			$this->cacheDir($this->convEncOut($this->_dirname($path)));
 			return $this->convEncIn(isset($this->cache[$outPath])? $this->cache[$outPath] : array());
