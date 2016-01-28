@@ -642,15 +642,6 @@ class elFinderVolumeS3 extends elFinderVolumeDriver {
 		
 	}
 
-	/**
-	 * chmod implementation
-	 *
-	 * @return bool
-	 **/
-	protected function _chmod($path, $mode) {
-		return false;
-	}
-
 }
 
 /**

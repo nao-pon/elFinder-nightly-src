@@ -114,11 +114,11 @@ class elFinderVolumeDropbox extends elFinderVolumeDriver {
 			'tmbPath'           => '../files/.tmb',
 			'tmbURL'            => 'files/.tmb',
 			'tmpPath'           => '',
-			'getTmbSize'        => 'large', // small: 32x32, medium or s: 64x64, large or m: 128x128, l: 640x480, xl: 1024x768
+			'getTmbSize'        => 'medium', // small: 32x32, medium or s: 64x64, large or m: 128x128, l: 640x480, xl: 1024x768
 			'metaCachePath'     => '',
 			'metaCacheTime'     => '600', // 10m
 			'acceptedName'      => '#^[^/\\?*:|"<>]*[^./\\?*:|"<>]$#',
-			'rootCssClass'      => 'elfinder-navbar-root-dropbox'
+			'icon'              => (defined('ELFINDER_IMG_PARENT_URL')? (rtrim(ELFINDER_IMG_PARENT_URL, '/').'/') : '').'img/volume_icon_dropbox.png'
 		);
 		$this->options = array_merge($this->options, $opts);
 		$this->options['mimeDetect'] = 'internal';
@@ -400,7 +400,7 @@ class elFinderVolumeDropbox extends elFinderVolumeDriver {
 			return $this->setError('PDO connection failed: '.$e->getMessage());
 		}
 		
-		$res = $this->deltaCheck(!empty($_REQUEST['reload']) && strpos($_REQUEST['target'], $this->id) === 0);
+		$res = $this->deltaCheck(!empty($_REQUEST['init']));
 		if ($res !== true) {
 			if (is_string($res)) {
 				return $this->setError($res);
@@ -434,21 +434,12 @@ class elFinderVolumeDropbox extends elFinderVolumeDriver {
 	 * @return void
 	 */
 	private function checkDB() {
-		$res = $this->query('SELECT * FROM sqlite_master WHERE type=\'table\' AND name=\''.$this->DB_TableName.'\'');
-		if ($res && isset($_REQUEST['init'])) {
-			// check is index(nameidx) UNIQUE?
-			$chk = $this->query('SELECT sql FROM sqlite_master WHERE type=\'index\' and name=\'nameidx\'');
-			if (!$chk || strpos(strtoupper($chk[0]), 'UNIQUE') === false) {
-				// remake
-				$this->DB->exec('DROP TABLE '.$this->DB_TableName);
-				$res = false;
-			}
-		}
+		$res = $this->query('select * from sqlite_master where type=\'table\' and name=\'dropbox\'; ');
 		if (! $res) {
 			try {
-				$this->DB->exec('CREATE TABLE '.$this->DB_TableName.'(path text, fname text, dat blob, isdir integer);');
-				$this->DB->exec('CREATE UNIQUE INDEX nameidx ON '.$this->DB_TableName.'(path, fname)');
-				$this->DB->exec('CREATE INDEX isdiridx ON '.$this->DB_TableName.'(isdir)');
+				$this->DB->exec('create table '.$this->DB_TableName.'(path text, fname text, dat blob, isdir integer);');
+				$this->DB->exec('create index nameidx on '.$this->DB_TableName.'(path, fname)');
+				$this->DB->exec('create index isdiridx on '.$this->DB_TableName.'(isdir)');
 			} catch (PDOException $e) {
 				return $this->setError($e->getMessage());
 			}
@@ -668,10 +659,9 @@ class elFinderVolumeDropbox extends elFinderVolumeDriver {
 					if (!isset($this->cache[$raw['path']])) {
 						$stat = $this->updateCache($raw['path'], $stat);
 					}
-					if (!empty($stat['hidden']) || ($mimes && $stat['mime'] === 'directory') || !$this->mimeAccepted($stat['mime'], $mimes)) {
-						continue;
+					if ($stat['mime'] !== 'directory' || $this->mimeAccepted($stat['mime'], $mimes)) {
+						$result[] = $this->stat($raw['path']);
 					}
-					$result[] = $this->stat($raw['path']);
 				}
 			}
 		}
@@ -788,12 +778,11 @@ class elFinderVolumeDropbox extends elFinderVolumeDriver {
 				}
 	
 			} else {
-				$result = $this->imgResize($tmb, $tmbSize, $tmbSize, true, true, 'png');
+				$result = $this->imgResize($tmb, $tmbSize, $tmbSize, true, true, $this->imgLib, 'png');
+				$result = $this->imgSquareFit($tmb, $tmbSize, $tmbSize, 'center', 'middle', $this->options['tmbBgColor'], 'png' );
 			}
-		
-			$result = $this->imgSquareFit($tmb, $tmbSize, $tmbSize, 'center', 'middle', $this->options['tmbBgColor'], 'png' );
+	
 		}
-		
 		if (!$result) {
 			unlink($tmb);
 			return false;
@@ -1347,15 +1336,6 @@ class elFinderVolumeDropbox extends elFinderVolumeDriver {
 	protected function _checkArchivers() {
 		// die('Not yet implemented. (_checkArchivers)');
 		return array();
-	}
-
-	/**
-	 * chmod implementation
-	 *
-	 * @return bool
-	 **/
-	protected function _chmod($path, $mode) {
-		return false;
 	}
 
 	/**
