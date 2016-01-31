@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1.6 (2.1_n-src Nightly: 84e9293) (2016-01-31)
+ * Version 2.1.6 (2.1_n-src Nightly: ba6355e) (2016-01-31)
  * http://elfinder.org
  * 
  * Copyright 2009-2016, Studio 42
@@ -4813,7 +4813,7 @@ if (!Object.keys) {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1.6 (2.1_n-src Nightly: 84e9293)';
+elFinder.prototype.version = '2.1.6 (2.1_n-src Nightly: ba6355e)';
 
 
 
@@ -13795,6 +13795,7 @@ elFinder.prototype.commands.pixlr = function() {
 			
 			exit = uploadURL + (uploadURL.indexOf('?') === -1 ? '?' : '&')
 				+ 'cmd=pixlr'
+				+ '&node=' + encodeURIComponent(fm.id)
 				+ cdata;
 			
 			url = 'http://pixlr.com/'+mode+'/?image=' + encodeURIComponent(img)
