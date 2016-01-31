@@ -130,6 +130,8 @@ window.elFinderSupportVer1 = function(upload) {
 			})
 			
 		return dfrd;
+		
+		return $.ajax(opts);
 	}
 	
 	// fix old connectors errors messages as possible

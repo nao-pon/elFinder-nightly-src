@@ -88,11 +88,6 @@ class elFinderPluginWatermark {
 			return false;
 		}
 		
-		// check Animation Gif
-		if (elFinder::isAnimationGif($src)) {
-			return false;
-		}
-		
 		// check water mark image
 		if (! file_exists($opts['source'])) {
 			$opts['source'] = dirname(__FILE__) . "/" . $opts['source'];
@@ -114,13 +109,12 @@ class elFinderPluginWatermark {
 
 		// check target image type
 		$imgTypes = array(
-			IMAGETYPE_GIF  => IMG_GIF,
+			IMAGETYPE_GIF => IMG_GIF,
 			IMAGETYPE_JPEG => IMG_JPEG,
-			IMAGETYPE_PNG  => IMG_PNG,
-			IMAGETYPE_BMP  => IMG_WBMP,
-			IMAGETYPE_WBMP => IMG_WBMP
+			IMAGETYPE_PNG => IMG_PNG,
+			IMAGETYPE_WBMP => IMG_WBMP,
 		);
-		if (! ($opts['targetType'] & @$imgTypes[$srcImgInfo[2]])) {
+		if (! ($opts['targetType'] & $imgTypes[$srcImgInfo[2]])) {
 			return false;
 		}
 		
@@ -134,7 +128,7 @@ class elFinderPluginWatermark {
 		$dest_x = $srcImgInfo[0] - $watermark_width - $marginLeft;
 		$dest_y = $srcImgInfo[1] - $watermark_height - $marginBottom;
 		
-		if (class_exists('Imagick', false)) {
+		if (class_exists('Imagick')) {
 			return $this->watermarkPrint_imagick($src, $watermark, $dest_x, $dest_y, $quality, $transparency, $watermarkImgInfo);
 		} else {
 			return $this->watermarkPrint_gd($src, $watermark, $dest_x, $dest_y, $quality, $transparency, $watermarkImgInfo, $srcImgInfo);
