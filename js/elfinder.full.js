@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1.7 (2.1_n-src Nightly: b33c82b) (2016-02-21)
+ * Version 2.1.7 (2.1_n-src Nightly: a75c287) (2016-02-28)
  * http://elfinder.org
  * 
  * Copyright 2009-2016, Studio 42
@@ -4865,7 +4865,7 @@ if (!Object.keys) {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1.7 (2.1_n-src Nightly: b33c82b)';
+elFinder.prototype.version = '2.1.7 (2.1_n-src Nightly: a75c287)';
 
 
 
@@ -7641,6 +7641,7 @@ $.fn.elfindercwd = function(fm, options) {
 			selectableOption = {
 				filter     : fileSelector,
 				stop       : trigger,
+				delay      : 250,
 				selected   : function(e, ui) { $(ui.selected).trigger(evtSelect); },
 				unselected : function(e, ui) { $(ui.unselected).trigger(evtUnselect); }
 			},
@@ -8539,6 +8540,7 @@ $.fn.elfindercwd = function(fm, options) {
 			})
 			.bind('sortchange', function() {
 				content(query ? lastSearch : fm.files(), !!query);
+				resize();
 			})
 			.bind('viewchange', function() {
 				var sel = fm.selected(),
@@ -10075,8 +10077,8 @@ $.fn.elfinderstat = function(fm) {
 					e.preventDefault();
 					fm.exec('opendir', [ hash ]);
 				}),
-			titlesize  = fm.i18n('size').toLowerCase(),
-			titleitems = fm.i18n('items').toLowerCase(),
+			titlesize  = fm.i18n('size'),
+			titleitems = fm.i18n('items'),
 			titlesel   = fm.i18n('selected'),
 			setstat    = function(files, cwd) {
 				var c = 0, 
@@ -10135,6 +10137,7 @@ $.fn.elfinderstat = function(fm) {
 		;
 	})
 }
+
 
 /*
  * File: /js/ui/toolbar.js
@@ -13083,7 +13086,7 @@ elFinder.prototype.commands.info = function() {
 		dialog = fm.dialog(view, opts);
 		dialog.attr('id', id);
 
-		if (file.url == '1') {
+		if (file && file.url == '1') {
 			dialog.on('click', '.'+spclass+'-url', function(){
 				$(this).parent().html(tpl.spinner.replace('{text}', fm.i18n('ntfurl')).replace('{name}', 'url'));
 				fm.request({
@@ -15695,7 +15698,7 @@ elFinder.prototype.commands.resize = function() {
 					hline   = 'elfinder-resize-handle-hline',
 					vline   = 'elfinder-resize-handle-vline',
 					rpoint  = 'elfinder-resize-handle-point',
-					src     = fm.url(file.hash)
+					src     = fm.openUrl(file.hash)
 					;
 				
 				imgr.mousedown( rotate.start );
