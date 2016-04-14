@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1.11 (2.1-src Nightly: d3490d7) (2016-04-12)
+ * Version 2.1.11 (2.1-src Nightly: 2884681) (2016-04-14)
  * http://elfinder.org
  * 
  * Copyright 2009-2016, Studio 42
@@ -4917,7 +4917,7 @@ if (!Object.keys) {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1.11 (2.1-src Nightly: d3490d7)';
+elFinder.prototype.version = '2.1.11 (2.1-src Nightly: 2884681)';
 
 
 
@@ -7120,30 +7120,63 @@ $.fn.elfindercontextmenu = function(fm) {
 						callback();
 					});
 			},
-			base,
+			base, cwd,
+
+			autoToggle = function() {
+				var evTouchStart = 'touchstart.contextmenuAutoToggle';
+				menu.data('hideTm') && clearTimeout(menu.data('hideTm'));
+				if (menu.is(':visible')) {
+					menu.on('touchstart', function() {
+						menu.stop();
+						menu.data('hideTm') && clearTimeout(menu.data('hideTm'));
+					})
+					.data('hideTm', setTimeout(function() {
+						cwd.find('.elfinder-cwd-file').off(evTouchStart);
+						cwd.find('.elfinder-cwd-file.ui-selected')
+						.one(evTouchStart, function(e) {
+							if (menu.first().length) {
+								open(e.originalEvent.touches[0].pageX, e.originalEvent.touches[0].pageY);
+								return false;
+							}
+						})
+						.one('unselect.'+fm.namespace, function() {
+							$(this).off(evTouchStart);
+						});
+						menu.fadeOut({
+							duration: 300,
+							fail: function() {
+								menu.css('opacity', '1').show();
+							}
+						});
+					}, 4500));
+				}
+			},
+			
 			open = function(x, y) {
 				var width      = menu.outerWidth(),
 					height     = menu.outerHeight(),
 					bpos       = base.offset(),
 					bwidth     = base.width(),
 					bheight    = base.height(),
-					mw         = fm.UA.Mobile? 30 : 2,
+					mw         = fm.UA.Mobile? 40 : 2,
 					mh         = fm.UA.Mobile? 20 : 2,
 					body       = $('body'),
 					x          = x - (bpos? bpos.left : 0) + body.scrollLeft(),
 					y          = y - (bpos? bpos.top : 0) + body.scrollTop(),
 					css        = {
-						top  : Math.max(0, y + mh + height < bheight ? y + mh : y - mh - height),
-						left : Math.max(0, (x < width + mw || x + mw + width < bwidth)? x + mw : x - mw - width)
+						top  : Math.max(0, y + mh + height < bheight ? y + mh : y - (y + height - bheight)),
+						left : Math.max(0, (x < width + mw || x + mw + width < bwidth)? x + mw : x - mw - width),
+						opacity : '1'
 					};
 
-				menu.css(css).show();
+				menu.stop().css(css).show();
 				
 				css[subpos] = parseInt(menu.width());
 				menu.find('.elfinder-contextmenu-sub').css(css);
 				if (fm.UA.iOS) {
 					$('div.elfinder div.overflow-scrolling-touch').css('-webkit-overflow-scrolling', 'auto');
 				}
+				fm.UA.Mobile && autoToggle();
 			},
 			
 			close = function() {
@@ -7236,6 +7269,7 @@ $.fn.elfindercontextmenu = function(fm) {
 								.appendTo(node.append('<span class="elfinder-contextmenu-arrow"/>'));
 							
 							hover = function(show){
+								submenu.css({ left: 'auto', right: 'auto' });
 								var nodeOffset = node.offset(),
 									baseleft   = nodeOffset.left,
 									basetop    = nodeOffset.top,
@@ -7249,10 +7283,13 @@ $.fn.elfindercontextmenu = function(fm) {
 
 								over = (baseleft + basewidth + width) - wwidth;
 								x = (baseleft > width && over > 0)? (fm.UA.Mobile? 10 - width : basewidth - over) : basewidth;
+								if (subpos === 'right' && baseleft < width) {
+									x = fm.UA.Mobile? 30 - basewidth : basewidth - (width - baseleft);
+								}
 								over = (basetop + 5 + height) - wheight;
 								y = (over > 0 && basetop < wheight)? 10 - over : (over > 0? 30 - height : 5);
 
-								submenu.css({ left : x, top : y }).toggle(show);
+								submenu.css({ top : y }).css(subpos, x).toggle(show);
 							};
 							
 							node.addClass('elfinder-contextmenu-group').hover(function(e){
@@ -7276,6 +7313,7 @@ $.fn.elfindercontextmenu = function(fm) {
 							
 							$.each(cmd.variants, function(i, variant) {
 								submenu.append(
+									variant === '|' ? '<div class="elfinder-contextmenu-separator"/>' :
 									$('<div class="'+clItem+' '+smItem+'"><span>'+variant[1]+'</span></div>').data('exec', variant[0])
 								);
 							});
@@ -7330,13 +7368,13 @@ $.fn.elfindercontextmenu = function(fm) {
 			};
 		
 		fm.one('load', function() {
-			var uiCwd = fm.getUI('cwd');
 			base = fm.getUI();
+			cwd = fm.getUI('cwd');
 			fm.bind('contextmenu', function(e) {
 				var data = e.data;
 
 				if (!data.type || data.type !== 'files') {
-					uiCwd.trigger('unselectall');
+					cwd.trigger('unselectall');
 				}
 				close();
 
@@ -10195,7 +10233,7 @@ $.fn.elfindersortbutton = function(cmd) {
 				order : type == fm.sortType ? fm.sortOrder == 'asc' ? 'desc' : 'asc' : fm.sortOrder, 
 				stick : fm.sortStickFolders
 			});
-		})
+		});
 		
 		$('<div class="'+item+' '+item+'-separated"><span class="ui-icon ui-icon-check"/>'+fm.i18n('sortFoldersFirst')+'</div>')
 			.appendTo(menu)
@@ -16594,9 +16632,18 @@ elFinder.prototype.commands.sort = function() {
 					type  : name,
 					order : name == fm.sortType ? fm.sortOrder == 'asc' ? 'desc' : 'asc' : fm.sortOrder
 				};
-			var arr = name == fm.sortType ? (sort.order == 'asc'? 'n' : 's') : '';
+			var arr = name == fm.sortType ? (sort.order == 'asc'? 's' : 'n') : '';
 			self.variants.push([sort, (arr? '<span class="ui-icon ui-icon-arrowthick-1-'+arr+'"></span>' : '') + '&nbsp;' + fm.i18n('sort'+name)]);
 		});
+		self.variants.push('|');
+		self.variants.push([
+			{
+				type  : fm.sortType,
+				order : fm.sortOrder,
+				stick : !fm.sortStickFolders
+			},
+			(fm.sortStickFolders? '<span class="ui-icon ui-icon-check"/>' : '') + '&nbsp;' + fm.i18n('sortFoldersFirst')
+		]);
 	});
 	
 	fm.bind('open sortchange viewchange search searchend', function() {
