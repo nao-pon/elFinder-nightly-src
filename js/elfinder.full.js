@@ -1,10 +1,10 @@
 /*!
  * elFinder - file manager for web
- * Version 2.0.6 (2.0_n-src Nightly: be3d05e) (2016-04-11)
+ * Version 2.0.7 (2.0_n-src Nightly: 57e763c) (2016-07-11)
  * http://elfinder.org
  * 
  * Copyright 2009-2016, Studio 42
- * Licensed under a 3 clauses BSD license
+ * Licensed under a 3-clauses BSD license
  */
 (function($) {
 
@@ -3311,7 +3311,7 @@ elFinder.prototype = {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.0.6 (2.0_n-src Nightly: be3d05e)';
+elFinder.prototype.version = '2.0.7 (2.0_n-src Nightly: 57e763c)';
 
 
 

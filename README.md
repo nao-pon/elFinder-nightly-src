@@ -90,6 +90,11 @@ Features
 
 Requirements
 ------------
+### jQuery / jQuery UI
+ * jQuery 1.8.0+
+ * jQuery UI 1.9.0+
+
+**However, we recommend newest version.**
 
 ### Client
  * Modern browser. elFinder was tested in Firefox 12, Internet Explorer 8+,
@@ -97,7 +102,7 @@ Requirements
 
 ### Server
  * Any web server
- * PHP 5.2+ (Recommend PHP 5.4 or higher) And for thumbnails - GD/Imagick module require
+ * PHP 5.2+ (Recommend PHP 5.4 or higher) And for thumbnails - GD / Imagick module / convert(imagemagick) require
 
 Installation
 ------------
@@ -122,8 +127,8 @@ Installation
 Downloads
 ------------
 **Stable releases** ([Changelog](https://github.com/Studio-42/elFinder/blob/master/Changelog))
- + [elFinder 2.1.11](https://github.com/Studio-42/elFinder/archive/2.1.11.zip)
- + [elFinder 2.0.6](https://github.com/Studio-42/elFinder/archive/2.0.6.zip)
+ + [elFinder 2.1.13](https://github.com/Studio-42/elFinder/archive/2.1.13.zip)
+ + [elFinder 2.0.7](https://github.com/Studio-42/elFinder/archive/2.0.7.zip)
 
 **Nightly builds**
  + [elFinder 2.1.x (Nightly)](https://github.com/Studio-42/elFinder/archive/2.1.zip)
@@ -177,7 +182,7 @@ You can create or modify the language file to use translation tool. Please refer
 --------------------
  * [lokothodida/elfinder-theme-moono](https://github.com/lokothodida/elfinder-theme-moono)
  * [lokothodida/elfinder-theme-windows-10](https://github.com/lokothodida/elfinder-theme-windows-10)
- * [StudioJunkyard/elfinder-boostrap-theme](https://github.com/StudioJunkyard/elfinder-bootstrap-theme)
+ * [StudioJunkyard/elfinder-boostrap-theme](https://github.com/StudioJunkyard/LibreICONS/tree/master/themes/elFinder)
 
 Support
 -------
