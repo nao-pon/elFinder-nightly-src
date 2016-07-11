@@ -109,6 +109,13 @@ abstract class elFinderVolumeDriver {
 	protected $imgLib = 'auto';
 	
 	/**
+	 * Video to Image converter
+	 * 
+	 * @var array
+	 */
+	protected $imgConverter = array();
+	
+	/**
 	 * Library to crypt files name
 	 *
 	 * @var string
@@ -182,6 +189,8 @@ abstract class elFinderVolumeDriver {
 		'treeDeep'        => 1,
 		// root url, not set to disable sending URL to client (replacement for old "fileURL" option)
 		'URL'             => '',
+		// directory link url to own manager url with folder hash (`true`, `false` or default `'auto'`: URL is empty then `true` else `false`)
+		'dirUrlOwn'     => 'auto',
 		// directory separator. required by client to show paths correctly
 		'separator'       => DIRECTORY_SEPARATOR,
 		// Server character encoding (default is '': UTF-8)
@@ -236,6 +245,14 @@ abstract class elFinderVolumeDriver {
 		'imgLib'          => 'auto',
 		// Fallback self image to thumbnail (nothing imgLib)
 		'tmbFbSelf'       => true,
+		// Video to Image converters ['TYPE or MIME' => ['func' => function($file){ /* Converts $file to Image */ return true; }, 'maxlen' => (int)TransferLength]]
+		'imgConverter'    => array(),
+		// Max length of transfer to image converter
+		'tmbVideoConvLen' => 10000000,
+		// Captre point seccond
+		'tmbVideoConvSec' => 6,
+		// Resource path of fallback icon images defailt: php/resouces
+		'resourcePath'    => '',
 		// Jpeg image saveing quality
 		'jpgQuality'      => 100,
 		// on paste file -  if true - old file will be replaced with new one, if false new file get name - original_name-number.ext
@@ -264,6 +281,10 @@ abstract class elFinderVolumeDriver {
 		'copyFrom'        => true,
 		// allow to copy from other volumes to this one?
 		'copyTo'          => true,
+		// cmd duplicate suffix format e.g. '_%s_' to without spaces
+		'duplicateSuffix' => ' %s ',
+		// unique name numbar format e.g. '(%d)' to (1), (2)...
+		'uniqueNumFormat' => '%d',
 		// list of commands disabled on this root
 		'disabled'        => array(),
 		// enable file owner, group & mode info, `false` to inactivate "chmod" command.
@@ -656,6 +677,10 @@ abstract class elFinderVolumeDriver {
 				$this->tmbPathWritable = is_writable($path);
 			}
 		}
+		// set resouce path
+		if (! is_dir($this->options['resourcePath'])) {
+			$this->options['resourcePath'] = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'resources';
+		}
 
 		// set image manipulation library
 		$type = preg_match('/^(imagick|gd|convert|auto)$/i', $this->options['imgLib'])
@@ -679,6 +704,28 @@ abstract class elFinderVolumeDriver {
 		if ($type !== 'auto' && $this->imgLib === '') {
 			// fallback
 			$this->imgLib = extension_loaded('imagick')? 'imagick' : (function_exists('gd_info')? 'gd' : '');
+		}
+		
+		// check video to img converter
+		if (! empty($this->options['imgConverter']) && is_array($this->options['imgConverter'])) {
+			foreach($this->options['imgConverter'] as $_type => $_converter) {
+				if (isset($_converter['func'])) {
+					$this->imgConverter[strtolower($_type)] = $_converter;
+				}
+			}
+		}
+		if (! isset($this->imgConverter['video'])) {
+			$videoLibCache = 'videoLib';
+			if (($videoLibCmd = $this->session->get($videoLibCache, false)) === false) {
+				$videoLibCmd = ($this->procExec('ffmpeg -version') === 0)? 'ffmpeg' : '';
+				$this->session->set($videoLibCache, $videoLibCmd);
+			}
+			if ($videoLibCmd) {
+				$this->imgConverter['video'] = array(
+					'func' => array($this, $videoLibCmd . 'ToImg'),
+					'maxlen' => $this->options['tmbVideoConvLen']
+				);
+			}
 		}
 		
 		// check archivers
@@ -1057,6 +1104,11 @@ abstract class elFinderVolumeDriver {
 		$this->URL      = $this->options['URL'];
 		if ($this->URL && preg_match("|[^/?&=]$|", $this->URL)) {
 			$this->URL .= '/';
+		}
+		if (strtolower($this->options['dirUrlOwn']) === 'auto') {
+			$this->options['dirUrlOwn'] = $this->URL? false : true;
+		} else {
+			$this->options['dirUrlOwn'] = (bool)$this->options['dirUrlOwn'];
 		}
 
 		$this->tmbURL   = !empty($this->options['tmbURL']) ? $this->options['tmbURL'] : '';
@@ -1604,7 +1656,18 @@ abstract class elFinderVolumeDriver {
 		$stat = $this->stat($path);
 		
 		if (isset($stat['tmb'])) {
-			return $stat['tmb'] == "1" ? $this->createTmb($path, $stat) : $stat['tmb'];
+			$res = $stat['tmb'] == "1" ? $this->createTmb($path, $stat) : $stat['tmb'];
+			if (! $res) {
+				list($type) = explode('/', $stat['mime']);
+				$fallback = $this->options['resourcePath'] . DIRECTORY_SEPARATOR . strtolower($type) . '.png';
+				if (is_file($fallback)) {
+					$res = $this->tmbname($stat);
+					if (! copy($fallback, $this->tmbPath . DIRECTORY_SEPARATOR . $res)) {
+						$res = false;
+					}
+				}
+			}
+			return $res;
 		}
 		return false;
 	}
@@ -1793,7 +1856,7 @@ abstract class elFinderVolumeDriver {
 
 		$path = $this->decode($hash);
 		$dir  = $this->dirnameCE($path);
-		$name = $this->uniqueName($dir, $file['name'], ' '.$suffix.' ');
+		$name = $this->uniqueName($dir, $file['name'], sprintf($this->options['duplicateSuffix'], $suffix));
 
 		if (!$this->allowCreate($dir, $name, ($file['mime'] === 'directory'))) {
 			return $this->setError(elFinder::ERROR_PERM_DENIED);
@@ -2626,6 +2689,34 @@ abstract class elFinderVolumeDriver {
 	}
 	
 	/**
+	 * Convert Video To Image by ffmpeg
+	 * 
+	 * @param  $file video source file path
+	 * @param  $stat file stat array
+	 * @return bool
+	 * @author Naoki Sawada
+	 */
+	public function ffmpegToImg($file, $stat) {
+		$name = basename($file);
+		$path = dirname($file);
+		$tmp = $path . DIRECTORY_SEPARATOR . md5($name);
+		$GLOBALS['elFinderTempFiles'][] = $tmp; // regist to remove at the end
+		if (rename($file, $tmp)) {
+			// specific start time by file name (xxx^[sec].[extention] - video^3.mp4)
+			if (preg_match('/\^(\d+(?:\.\d+)?)\.[^.]+$/', $stat['name'], $_m)) {
+				$ss = $_m[1];
+			} else {
+				$ss = $this->options['tmbVideoConvSec'];
+			}
+			$cmd = sprintf('ffmpeg -ss 00:00:%.3f -vframes 1 -i %s -f image2 %s', $ss, escapeshellarg($tmp), escapeshellarg($file));
+			$r = $this->procExec($cmd);
+			unlink($tmp);
+			return ($r === 0);
+		}
+		return false;
+	}
+
+	/**
 	 * Save error message
 	 *
 	 * @param  array  error 
@@ -2944,7 +3035,7 @@ abstract class elFinderVolumeDriver {
 		$max = $i+100000;
 
 		while ($i <= $max) {
-			$n = $name.($i > 0 ? $i : '').$ext;
+			$n = $name.($i > 0 ? sprintf($this->options['uniqueNumFormat'], $i) : '').$ext;
 
 			if (!$this->stat($this->joinPathCE($dir, $n))) {
 				$this->clearcache();
@@ -3111,7 +3202,7 @@ abstract class elFinderVolumeDriver {
 	 */
 	protected function delTree($localpath) {
 		foreach ($this->_scandir($localpath) as $p) {
-			set_time_limit(30);
+			elFinder::extendTimeLimit();
 			$stat = $this->stat($this->convEncOut($p));
 			$this->convEncIn();
 			($stat['mime'] === 'directory')? $this->delTree($p) : $this->_unlink($p);
@@ -3473,6 +3564,9 @@ abstract class elFinderVolumeDriver {
 				} else {
 					$stat['dirs'] = 1;
 				}
+				if ($this->options['dirUrlOwn'] === true) {
+					$stat['url'] = '#elf_' . $stat['hash'];
+				}
 			} else {
 				// for files - check for thumbnails
 				$p = isset($stat['target']) ? $stat['target'] : $path;
@@ -3637,6 +3731,9 @@ abstract class elFinderVolumeDriver {
 	 * @author Dmitry (dio) Levashov
 	 **/
 	protected function countSize($path) {
+		
+		elFinder::extendTimeLimit();
+		
 		$stat = $this->stat($path);
 
 		if (empty($stat) || !$stat['read'] || !empty($stat['hidden'])) {
@@ -3815,7 +3912,7 @@ abstract class elFinderVolumeDriver {
 		}
 		
 		foreach($this->scandirCE($path) as $p) {
-			set_time_limit($this->options['searchTimeout'] + 30);
+			elFinder::extendTimeLimit($this->options['searchTimeout'] + 30);
 			
 			if ($timeout && ($this->error || $timeout < time())) {
 				!$this->error && $this->setError(elFinder::ERROR_SEARCH_TIMEOUT, $this->path($this->encode($path)));
@@ -3878,6 +3975,9 @@ abstract class elFinderVolumeDriver {
 	 * @author Dmitry (dio) Levashov
 	 **/
 	protected function copy($src, $dst, $name) {
+		
+		elFinder::extendTimeLimit();
+		
 		$srcStat = $this->stat($src);
 		$this->clearcache();
 		
@@ -3973,6 +4073,8 @@ abstract class elFinderVolumeDriver {
 	 * @author Dmitry (dio) Levashov
 	 **/
 	protected function copyFrom($volume, $src, $destination, $name) {
+		
+		elFinder::extendTimeLimit();
 		
 		if (($source = $volume->file($src)) == false) {
 			return $this->setError(elFinder::ERROR_COPY, '#'.$src, $volume->error());
@@ -4126,11 +4228,24 @@ abstract class elFinderVolumeDriver {
 	 * @author Dmitry (dio) Levashov
 	 **/
 	protected function canCreateTmb($path, $stat, $checkTmbPath = true) {
-		return (!$checkTmbPath || $this->tmbPathWritable) 
-			&& (!$this->tmbPath || strpos($path, $this->tmbPath) === false) // do not create thumnbnail for thumnbnail
-			&& $this->imgLib 
-			&& strpos($stat['mime'], 'image') === 0 
-			&& ($this->imgLib == 'gd' ? in_array($stat['mime'], array('image/jpeg', 'image/png', 'image/gif', 'image/x-ms-bmp')) : true);
+		if ((! $checkTmbPath || $this->tmbPathWritable) 
+			&& (! $this->tmbPath || strpos($path, $this->tmbPath) === false) // do not create thumnbnail for thumnbnail
+		) {
+			$mime = strtolower($stat['mime']);
+			list($type) = explode('/', $mime);
+			if (! empty($this->imgConverter)) {
+				if (isset($this->imgConverter[$mime])) {
+					return true;
+				}
+				if (isset($this->imgConverter[$type])) {
+					return true;
+				}
+			}
+			return $this->imgLib
+				&& ($type === 'image')
+				&& ($this->imgLib == 'gd' ? in_array($stat['mime'], array('image/jpeg', 'image/png', 'image/gif', 'image/x-ms-bmp')) : true);
+		}
+		return false;
 	}
 	
 	/**
@@ -4163,6 +4278,27 @@ abstract class elFinderVolumeDriver {
 		$name = $this->tmbname($stat);
 		$tmb  = $this->tmbPath.DIRECTORY_SEPARATOR.$name;
 
+		$maxlength = -1;
+		$imgConverter = null;
+		
+		// check imgConverter
+		$mime = strtolower($stat['mime']);
+		list($type) = explode('/', $mime);
+		if (isset($this->imgConverter[$mime])) {
+			$imgConverter = $this->imgConverter[$mime]['func'];
+			if (! empty($this->imgConverter[$mime]['maxlen'])) {
+				$maxlength = intval($this->imgConverter[$mime]['maxlen']);
+			}
+		} else if (isset($this->imgConverter[$type])) {
+			$imgConverter = $this->imgConverter[$type]['func'];
+			if (! empty($this->imgConverter[$type]['maxlen'])) {
+				$maxlength = intval($this->imgConverter[$type]['maxlen']);
+			}
+		}
+		if ($imgConverter && ! is_callable($imgConverter)) {
+			return false;
+		}
+
 		// copy image into tmbPath so some drivers does not store files on local fs
 		if (($src = $this->fopenCE($path, 'rb')) == false) {
 			return false;
@@ -4173,12 +4309,18 @@ abstract class elFinderVolumeDriver {
 			return false;
 		}
 
-		while (!feof($src)) {
-			fwrite($trg, fread($src, 8192));
-		}
+		stream_copy_to_stream($src, $trg, $maxlength);
 
 		$this->fcloseCE($src, $path);
 		fclose($trg);
+
+		// call imgConverter
+		if ($imgConverter) {
+			if (! call_user_func_array($imgConverter, array($tmb, $stat, $this))) {
+				file_exists($tmb) && unlink($tmb);
+				return false;
+			}
+		}
 
 		$result = false;
 		
@@ -4213,7 +4355,7 @@ abstract class elFinderVolumeDriver {
 				} catch (Exception $e) {}
 			}
 			if (! $result) {
-				unlink($tmb);
+				file_exists($tmb) && unlink($tmb);
 				return false;
 			}
 			$result = false;
@@ -4314,7 +4456,7 @@ abstract class elFinderVolumeDriver {
 			}
 		}
 
-		set_time_limit(300);
+		elFinder::extendTimeLimit(300);
 		switch ($this->imgLib) {
 			case 'imagick':
 				
@@ -4447,7 +4589,7 @@ abstract class elFinderVolumeDriver {
 			$jpgQuality = $this->options['jpgQuality'];
 		}
 
-		set_time_limit(300);
+		elFinder::extendTimeLimit(300);
 		switch ($this->imgLib) {
 			case 'imagick':
 				
@@ -4570,7 +4712,7 @@ abstract class elFinderVolumeDriver {
 			$jpgQuality = $this->options['jpgQuality'];
 		}
 
-		set_time_limit(300);
+		elFinder::extendTimeLimit(300);
 		switch ($this->imgLib) {
 			case 'imagick':
 				try {
@@ -4712,7 +4854,7 @@ abstract class elFinderVolumeDriver {
 			$jpgQuality = $this->options['jpgQuality'];
 		}
 
-		set_time_limit(300);
+		elFinder::extendTimeLimit(300);
 		switch ($this->imgLib) {
 			case 'imagick':
 				try {
@@ -4863,7 +5005,7 @@ abstract class elFinderVolumeDriver {
 	protected function rmTmb($stat) {
 		if ($stat['mime'] === 'directory') {
 			foreach ($this->scandirCE($this->decode($stat['hash'])) as $p) {
-				set_time_limit(30);
+				elFinder::extendTimeLimit(30);
 				$name = $this->basenameCE($p);
 				$name != '.' && $name != '..' && $this->rmTmb($this->stat($p));
 			}
@@ -5295,7 +5437,7 @@ abstract class elFinderVolumeDriver {
 					if ($file === '.' || $file === '..') {
 						continue;
 					}
-					set_time_limit(30);
+					elFinder::extendTimeLimit(30);
 					$path = $dir . DIRECTORY_SEPARATOR . $file;
 					if (!is_link($dir) && is_dir($path)) {
 						$this->rmdirRecursive($path);
@@ -5335,6 +5477,9 @@ abstract class elFinderVolumeDriver {
 			$cwd = getcwd();
 			chdir($dir);
 			
+			foreach($files as $i => $file) {
+				$files[$i] = '.'.DIRECTORY_SEPARATOR.$file;
+			}
 			$files = array_map('escapeshellarg', $files);
 			
 			$cmd = $arc['cmd'].' '.$arc['argc'].' '.escapeshellarg($name).' '.implode(' ', $files);
