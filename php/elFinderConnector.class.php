@@ -27,17 +27,24 @@ class elFinderConnector {
 	 **/
 	protected $header = 'Content-Type: application/json';
 
-
-    /**
-     * Constructor
-     *
-     * @param $elFinder
-     * @param bool $debug
-     * @author Dmitry (dio) Levashov
-     */
+	/**
+	 * HTTP request method
+	 * 
+	 * @var string
+	 */
+	protected $reqMethod = '';
+	
+	/**
+	 * Constructor
+	 *
+	 * @param $elFinder
+	 * @param bool $debug
+	 * @author Dmitry (dio) Levashov
+	 */
 	public function __construct($elFinder, $debug=false) {
 		
 		$this->elFinder = $elFinder;
+		$this->reqMethod = strtoupper($_SERVER["REQUEST_METHOD"]);
 		if ($debug) {
 			$this->header = 'Content-Type: text/html; charset=utf-8';
 		}
@@ -50,27 +57,42 @@ class elFinderConnector {
 	 * @author Dmitry (dio) Levashov
 	 **/
 	public function run() {
-		$isPost = $_SERVER["REQUEST_METHOD"] == 'POST';
-		$src    = $_SERVER["REQUEST_METHOD"] == 'POST' ? $_POST : $_GET;
-		if ($isPost && !$src && $rawPostData = @file_get_contents('php://input')) {
-			// for support IE XDomainRequest()
+		$isPost = $this->reqMethod === 'POST';
+		$src    = $isPost ? $_POST : $_GET;
+		$maxInputVars = (! $src || isset($src['targets']))? ini_get('max_input_vars') : null;
+		if ((! $src || $maxInputVars) && $rawPostData = file_get_contents('php://input')) {
+			// for max_input_vars and supports IE XDomainRequest()
 			$parts = explode('&', $rawPostData);
-			foreach($parts as $part) {
-				list($key, $value) = array_pad(explode('=', $part), 2, '');
-				$key = rawurldecode($key);
-				if (substr($key, -2) === '[]') {
-					$key = substr($key, 0, strlen($key) - 2);
-					if (!isset($src[$key])) {
-						$src[$key] = array();
+			if (! $src || $maxInputVars < count($parts)) {
+				$src = array();
+				foreach($parts as $part) {
+					list($key, $value) = array_pad(explode('=', $part), 2, '');
+					$key = rawurldecode($key);
+					if (preg_match('/^(.+?)\[([^\[\]]*)\]$/', $key, $m)) {
+						$key = $m[1];
+						$idx = $m[2];
+						if (!isset($src[$key])) {
+							$src[$key] = array();
+						}
+						if ($idx) {
+							$src[$key][$idx] = rawurldecode($value);
+						} else {
+							$src[$key][] = rawurldecode($value);
+						}
+					} else {
+						$src[$key] = rawurldecode($value);
 					}
-					$src[$key][] = rawurldecode($value);
-				} else {
-					$src[$key] = rawurldecode($value);
 				}
+				$_POST = $this->input_filter($src);
+				$_REQUEST = $this->input_filter(array_merge_recursive($src, $_REQUEST));
 			}
-			$_POST = $this->input_filter($src);
-			$_REQUEST = $this->input_filter(array_merge_recursive($src, $_REQUEST));
 		}
+		
+		if (isset($src['targets']) && $this->elFinder->maxTargets && count($src['targets']) > $this->elFinder->maxTargets) {
+			$error = $this->elFinder->error(elFinder::ERROR_MAX_TARGTES);
+			$this->output(array('error' => $this->elFinder->error(elFinder::ERROR_MAX_TARGTES)));
+		}
+		
 		$cmd    = isset($src['cmd']) ? $src['cmd'] : '';
 		$args   = array();
 		
@@ -151,7 +173,9 @@ class elFinderConnector {
 		if (isset($data['pointer'])) {
 			$toEnd = true;
 			$fp = $data['pointer'];
-			if (elFinder::isSeekableStream($fp) && (array_search('Accept-Ranges: none', headers_list()) === false)) {
+			if (($this->reqMethod === 'GET' || $this->reqMethod === 'HEAD')
+					&& elFinder::isSeekableStream($fp)
+					&& (array_search('Accept-Ranges: none', headers_list()) === false)) {
 				header('Accept-Ranges: bytes');
 				$psize = null;
 				if (!empty($_SERVER['HTTP_RANGE'])) {
@@ -201,13 +225,16 @@ class elFinderConnector {
 			// client disconnect should abort
 			ignore_user_abort(false);
 
-			if ($toEnd) {
-				fpassthru($fp);
-			} else {
-				$out = fopen('php://output', 'wb');
-				stream_copy_to_stream($fp, $out, $psize);
-				fclose($out);
+			if ($reqMethod !== 'HEAD') {
+				if ($toEnd) {
+					fpassthru($fp);
+				} else {
+					$out = fopen('php://output', 'wb');
+					stream_copy_to_stream($fp, $out, $psize);
+					fclose($out);
+				}
 			}
+			
 			if (!empty($data['volume'])) {
 				$data['volume']->close($data['pointer'], $data['info']['hash']);
 			}
