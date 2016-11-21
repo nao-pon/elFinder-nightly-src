@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1.17 (2.1-src Nightly: 25f423f) (2016-11-19)
+ * Version 2.1.18 (2.1-src Nightly: 1086cb4) (2016-11-21)
  * http://elfinder.org
  * 
  * Copyright 2009-2016, Studio 42
@@ -4857,6 +4857,7 @@ elFinder.prototype = {
 						formData.append('chunk', file._chunkmerged);
 						formData.append('upload[]', file._name);
 						formData.append('mtime[]', file._mtime);
+						xhr.timeout = 0;
 					} else {
 						if (file._chunkfail) {
 							formData.append('upload[]', 'chunkfail');
@@ -6543,7 +6544,7 @@ if (!Object.keys) {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1.17 (2.1-src Nightly: 25f423f)';
+elFinder.prototype.version = '2.1.18 (2.1-src Nightly: 1086cb4)';
 
 
 
@@ -8363,6 +8364,7 @@ elFinder.prototype.resources = {
 										syncOnFail  : true
 									})
 									.fail(function(error) {
+										fm.unlockfiles({files : [id]});
 										inError = true;
 										input.show().prev().remove();
 										fm.error(error, {modal: true, close: select});
@@ -18089,6 +18091,7 @@ elFinder.prototype.commands.netmount = function() {
 				content.find('select,input').addClass('elfinder-tabstop');
 				
 				dialog = fm.dialog(content, opts);
+				dialogNode = dialog.closest('.ui-dialog');
 				dialog.ready(function(){
 					inputs.protocol.change();
 					dialog.elfinderdialog('posInit');
@@ -18102,7 +18105,6 @@ elFinder.prototype.commands.netmount = function() {
 		} else {
 			self.dialog.elfinderdialog('open');
 		}
-		dialogNode = self.dialog.closest('.ui-dialog');
 
 		return dfrd.promise();
 	}
