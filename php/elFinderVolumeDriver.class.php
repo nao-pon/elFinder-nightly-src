@@ -843,8 +843,6 @@ abstract class elFinderVolumeDriver {
 	}
 	
 	/**
-<<<<<<< HEAD
-=======
 	 * Return is uploadable that given file name 
 	 *
 	 * @param  string  $name  file name
@@ -858,24 +856,18 @@ abstract class elFinderVolumeDriver {
 	}
 	
 	/**
->>>>>>> 2.0-src
 	 * Return Extention/MIME Table (elFinderVolumeDriver::$mimetypes)
 	 * 
 	 * @return array
 	 * @author Naoki Sawada
 	 */
 	public function getMimeTable() {
-<<<<<<< HEAD
-=======
 		// load mime.types
 		! elFinderVolumeDriver::$mimetypesLoaded && elFinderVolumeDriver::mimetypeInternalDetect();
->>>>>>> 2.0-src
 		return elFinderVolumeDriver::$mimetypes;
 	}
 	
 	/**
-<<<<<<< HEAD
-=======
 	 * Return file extention detected by MIME type
 	 * 
 	 * @param  string  $mime    MIME type
@@ -903,7 +895,6 @@ abstract class elFinderVolumeDriver {
 	}
 	
 	/**
->>>>>>> 2.0-src
 	 * Set mimetypes allowed to display to client
 	 *
 	 * @param  array  $mimes
@@ -1366,11 +1357,6 @@ abstract class elFinderVolumeDriver {
 			return $this->setError(elFinder::ERROR_INVALID_NAME, $name);
 		}
 		
-		$mimeByName = $this->mimetype($name, true);
-		if ($mimeByName && !$this->allowPutMime($mimeByName)) {
-			return $this->setError(elFinder::ERROR_UPLOAD_FILE_MIME, $name);
-		}
-		
 		if (!($file = $this->file($hash))) {
 			return $this->setError(elFinder::ERROR_FILE_NOT_FOUND);
 		}
@@ -1381,6 +1367,13 @@ abstract class elFinderVolumeDriver {
 		
 		if (!empty($file['locked'])) {
 			return $this->setError(elFinder::ERROR_LOCKED, $file['name']);
+		}
+		
+		if ($file['mime'] !== 'directory') {
+			$mimeByName = $this->mimetype($name, true);
+			if ($mimeByName && !$this->allowPutMime($mimeByName)) {
+				return $this->setError(elFinder::ERROR_UPLOAD_FILE_MIME, $name);
+			}
 		}
 		
 		$path = $this->decode($hash);
